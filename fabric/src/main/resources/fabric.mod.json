@@ -7,11 +7,17 @@
   "authors": ["streats22"],
   "license": "MIT",
   "environment": "client",
-  "entrypoints": {},
+  "entrypoints": {
+    "modmenu": ["dev.battleplacks.fabric.BattleplacksModMenu"]
+  },
   "mixins": ["battleplacks.mixins.json"],
   "depends": {
     "fabricloader": ">=0.17.2",
     "minecraft": "1.21.1",
     "cobblemon": "*"
+  },
+  "suggests": {
+    "modmenu": "*",
+    "cloth-config": "*"
   }
 }

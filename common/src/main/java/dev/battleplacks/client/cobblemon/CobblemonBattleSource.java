@@ -16,6 +16,7 @@ import net.minecraft.client.Minecraft;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -29,6 +30,12 @@ public final class CobblemonBattleSource implements BattleSource {
     @Override
     public boolean inBattle() {
         return CobblemonClient.INSTANCE.getBattle() != null;
+    }
+
+    @Override
+    public Optional<UUID> battleId() {
+        ClientBattle battle = CobblemonClient.INSTANCE.getBattle();
+        return battle == null ? Optional.empty() : Optional.of(battle.getBattleId());
     }
 
     @Override

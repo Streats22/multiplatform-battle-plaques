@@ -19,6 +19,10 @@ subprojects {
         maven("https://maven.parchmentmc.org")
         maven("https://maven.fabricmc.net/")
         maven("https://maven.impactdev.net/repository/development/")
+        exclusiveContent {
+            forRepository { maven("https://api.modrinth.com/maven") }
+            filter { includeGroup("maven.modrinth") }
+        }
         mavenCentral()
     }
 }

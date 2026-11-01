@@ -8,7 +8,7 @@ import net.minecraft.client.gui.GuiGraphics;
 /** Everything an element needs to draw itself in one card. Mirroring for right-hand cards lives here, once. */
 public record CardContext(GuiGraphics g, Font font, PlaqueConfig cfg, Theme.Palette palette, int accent,
                           boolean left, float partial, int x) {
-    public static final int WIDTH = 150;
+    public static final int WIDTH = 140;
 
     /** X for something {@code width} wide placed {@code offset} from the card's near edge. */
     public int edgeX(int offset, int width) {

@@ -5,14 +5,32 @@ import com.google.gson.GsonBuilder;
 import net.minecraft.client.Minecraft;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 /** User settings, stored as config/battleplacks.json. Every field is mirrored in preview/index.html. */
 public class PlaqueConfig {
     public boolean enabled = true;
-    /** Cancel Cobblemon's own tiles while a battle is running. */
-    public boolean replaceDefaultTiles = true;
+    /** Cards for battles against other players. */
+    public boolean includePlayerBattles = true;
+    /** Cards for wild Pokémon battles (off by default: Cobblemon's own tiles are kept). */
+    public boolean includeWildBattles = false;
+    /** Which NPC trainers (RCT) get cards, matched on the trainer's display name. */
+    public TrainerFilterMode trainerFilterMode = TrainerFilterMode.ONLY_MATCHING;
+    /** Case-insensitive regexes (plain text works too) tested against the trainer's display name. */
+    public List<String> trainerPatterns = new ArrayList<>(
+            List.of("Gym Leader", "Leader", "Elite Four", "Champion", "Rival"));
+    /** Cancel Cobblemon's own tiles while a battle is running (needs showTiles to replace them). */
+    public boolean replaceDefaultTiles = false;
+    /** Draw Battleplacks' own Pokémon tile (off by default: the strip sits under Cobblemon's tile instead). */
+    public boolean showTiles = false;
+    /** Extra pixels between Cobblemon's tile and the strip. */
+    public int stripOffset = 0;
+    /** Short presentation of both trainers when a battle starts. */
+    public boolean introEnabled = false;
+    public int introSeconds = 3;
     public Theme theme = Theme.COBBLEMON;
     public Anchor ownAnchor = Anchor.TOP_LEFT;
     public Anchor opponentAnchor = Anchor.TOP_RIGHT;
@@ -21,6 +39,11 @@ public class PlaqueConfig {
     /** Pose of the 3D trainer on each side. */
     public Stance ownStance = Stance.LEANING;
     public Stance opponentStance = Stance.STANDING;
+    /** Used when a stance is CUSTOM: degrees turned towards the screen centre, and degrees leaned forward. */
+    public int customFacing = 35;
+    public int customLean = 10;
+    /** Draw the strip's background texture (assets/battleplacks/textures/gui/strip.png, replaceable by a resource pack). */
+    public boolean showStripBackground = true;
     public float scale = 1.0f;
     public int margin = 8;
     public boolean showHead = true;

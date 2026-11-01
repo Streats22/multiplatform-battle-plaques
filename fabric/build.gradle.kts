@@ -18,13 +18,39 @@ dependencies {
 
     implementation(project(":common", configuration = "namedElements"))
 
+    // Mod Menu adds the config button; Cloth Config draws the screen (jar supplied in libs/)
+    modCompileOnly(files(rootProject.file("libs/modmenu-11.0.5.jar")))
+    modLocalRuntime(files(rootProject.file("libs/modmenu-11.0.5.jar")))
+    modLocalRuntime("me.shedaniel.cloth:cloth-config-fabric:${property("cloth_config_version")}") {
+        exclude(group = "net.fabricmc.fabric-api")
+    }
+
     // Dev client runs next to the real Cobblemon (its pom brings Fabric Language Kotlin and friends)
     modLocalRuntime("com.cobblemon:fabric:${property("cobblemon_version")}")
+
+    // RCT API needs Architectury API 13.0.2+ and Fabric Loader 0.18+
+    modLocalRuntime("dev.architectury:architectury-fabric:${property("architectury_api_version")}")
+
+    // Radical Cobblemon Trainers, so RCT trainer battles can be tested in the dev client (jars supplied in libs/)
+    modLocalRuntime(files(rootProject.file("libs/rctapi-fabric-1.21.1-0.16.2-beta.jar")))
+    modLocalRuntime(files(rootProject.file("libs/rctmod-fabric-1.21.1-0.19.2-beta.jar")))
+    modLocalRuntime("maven.modrinth:forge-config-api-port:v21.1.6-1.21.1-Fabric")
+    // RCT reads its config with Night Config, which Forge Config API Port does not bring along in a dev environment
+    runtimeOnly("com.electronwill.night-config:core:3.8.1")
+    runtimeOnly("com.electronwill.night-config:toml:3.8.1")
 }
 
 // Package the shared code (and the mixin config) from :common into this jar; remapJar then maps it to production names.
 tasks.jar {
     from(project(":common").sourceSets.main.get().output)
+}
+
+// Dev client only: LWJGL 3.3.3 (Minecraft 1.21.1's version) crashes in GLFW on new macOS, so run on 3.3.6.
+// lwjgl-freetype stays on Mojang's version because its macOS patch jar only exists for 3.3.3.
+configurations.configureEach {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "org.lwjgl" && requested.name != "lwjgl-freetype") useVersion("3.3.6")
+    }
 }
 
 tasks.processResources {

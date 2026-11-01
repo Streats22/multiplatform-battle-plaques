@@ -2,14 +2,14 @@ package dev.battleplacks.client.render;
 
 import dev.battleplacks.client.PlaqueModel;
 
-/** The trainer in 3D (your own player is always drawn) standing next to their active Pokémon. */
-final class TrainerGroupElement implements CardElement {
+/** Full-size trainer and active Pokémon, shown only during the optional battle intro. */
+final class IntroGroupElement implements CardElement {
     private static final int HEIGHT = 84, GAP = 4, TRAINER_OFFSET = 20, POKEMON_OFFSET = 52;
 
     private final PlaqueModel model;
     private final TrainerEntityPainter painter;
 
-    TrainerGroupElement(PlaqueModel model, TrainerEntityPainter painter) {
+    IntroGroupElement(PlaqueModel model, TrainerEntityPainter painter) {
         this.model = model;
         this.painter = painter;
     }
@@ -22,7 +22,7 @@ final class TrainerGroupElement implements CardElement {
         int top = y + 2;
         int trainerX = c.edgeX(TRAINER_OFFSET, 0);
         painter.find(model.entityId()).ifPresentOrElse(
-                e -> painter.paint(c, e, trainerX, top + HEIGHT - 2, c.cfg().stanceFor(model.own())),
+                e -> painter.paintStandingOn(c, e, trainerX, top + HEIGHT - 2, 38f, c.cfg().stanceFor(model.own())),
                 () -> c.g().fill(trainerX - 8, top + HEIGHT - 40, trainerX + 8, top + HEIGHT - 24, 0xFF55607A));
 
         int count = model.active().size();
