@@ -35,19 +35,20 @@ final class VsScreen {
 
         int bandH = sh * 30 / 100, bandY = sh * 36 / 100;
         int slide = Math.round((1f - in) * sw * 0.6f + out * sw * 0.6f);
-        int ownColor = palette.accent(true, cfg), foeColor = palette.accent(false, cfg);
+        CardLook ownLook = CardLook.of(own, cfg, palette), foeLook = CardLook.of(foe, cfg, palette);
+        int ownColor = ownLook.accent(), foeColor = foeLook.accent();
 
         g.fill(0, 0, sw, sh, ((int) (0x70 * visible) << 24));
         drawBand(g, -slide, sw / 2 + 12 - slide, bandY, bandH, ownColor, visible);
         drawBand(g, sw / 2 - 12 + slide, sw + slide, bandY, bandH, foeColor, visible);
         drawDivider(g, sw / 2, bandY, bandH, visible);
 
-        drawSide(g, own, true, cfg, palette, ownColor, sw, sh, bandY, bandH, -slide, visible, partial);
-        drawSide(g, foe, false, cfg, palette, foeColor, sw, sh, bandY, bandH, slide, visible, partial);
+        drawSide(g, own, ownLook, true, cfg, palette, ownColor, sw, sh, bandY, bandH, -slide, visible, partial);
+        drawSide(g, foe, foeLook, false, cfg, palette, foeColor, sw, sh, bandY, bandH, slide, visible, partial);
         drawVs(g, sw, bandY + bandH, in, visible);
     }
 
-    private void drawSide(GuiGraphics g, PlaqueModel m, boolean left, PlaqueConfig cfg, Theme.Palette palette, int color,
+    private void drawSide(GuiGraphics g, PlaqueModel m, CardLook look, boolean left, PlaqueConfig cfg, Theme.Palette palette, int color,
                           int sw, int sh, int bandY, int bandH, int dx, float visible, float partial) {
         Font font = Minecraft.getInstance().font;
         CardContext c = new CardContext(g, font, cfg, palette, color, left, partial, 0, visible);
@@ -65,7 +66,7 @@ final class VsScreen {
             }
         }
 
-        String name = m.kind() == PlaqueModel.Kind.NPC ? m.name() : TeamLabelElement.labelFor(m);
+        String name = TeamLabelElement.labelFor(m, look);
         float scale = 1.6f;
         int textW = Math.round(font.width(name) * scale);
         int textX = left ? Math.round(sw * 0.05f) + dx : sw - Math.round(sw * 0.05f) - textW + dx;

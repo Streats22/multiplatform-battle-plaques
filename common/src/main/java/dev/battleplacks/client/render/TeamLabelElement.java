@@ -1,25 +1,19 @@
 package dev.battleplacks.client.render;
 
 import dev.battleplacks.client.PlaqueModel;
-import dev.battleplacks.config.PlaqueConfig;
-import dev.battleplacks.team.TeamNameRules;
-import dev.battleplacks.team.TeamNames;
 
 /** "Team <name>" for players, the trainer's own name for NPCs. */
 final class TeamLabelElement implements CardElement {
     private final String label;
 
-    TeamLabelElement(PlaqueModel model) {
-        this.label = labelFor(model);
+    TeamLabelElement(PlaqueModel model, CardLook look) {
+        this.label = labelFor(model, look);
     }
 
     /** NPC trainers keep their own name; players show their chosen team name, else "Team <name>". */
-    static String labelFor(PlaqueModel model) {
+    static String labelFor(PlaqueModel model, CardLook look) {
         if (model.kind() == PlaqueModel.Kind.NPC) return model.name();
-        String chosen = model.own()
-                ? TeamNameRules.validate(PlaqueConfig.get().teamName).name()
-                : TeamNames.get(model.entityId()).orElse("");
-        return chosen.isEmpty() ? "Team " + model.name() : chosen;
+        return look.teamName().isEmpty() ? "Team " + model.name() : look.teamName();
     }
 
     @Override

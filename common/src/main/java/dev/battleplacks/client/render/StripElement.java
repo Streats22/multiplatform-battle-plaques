@@ -11,9 +11,7 @@ import net.minecraft.resources.ResourceLocation;
 final class StripElement implements CardElement {
     private static final ResourceLocation BACKGROUND =
             ResourceLocation.fromNamespaceAndPath("battleplacks", "textures/gui/strip.png");
-    private static final int HEIGHT = 44, PAD = 3;
-    private static final int TRAINER_OFFSET = 28, POKEMON_OFFSET = 44;
-    private static final float TRAINER_SCALE = 50f;
+    private static final int HEIGHT = StripLayout.HEIGHT;
 
     private final PlaqueModel model;
     private final TrainerEntityPainter painter;
@@ -40,24 +38,25 @@ final class StripElement implements CardElement {
         g.disableScissor();
     }
 
-    /** Pokemon first so the trainer stands in front. The portrait is centred in its square, so the square starts above the strip. */
+    /** Pokemon first so the trainer stands in front. Size and height come from {@link StripLayout} (and the config). */
     private void drawPokemon(CardContext c, int y) {
         int count = model.active().size();
-        float size = count > 1 ? 17 : 22; // about the size of a Cobblemon tile portrait
+        float size = StripLayout.pokemonSize(count, c.cfg());
+        float cy = StripLayout.pokemonCentreY(y, size, c.cfg());
         for (int i = 0; i < count; i++) {
             var portrait = model.active().get(i).portrait();
             if (portrait == null) continue;
-            float cx = c.edgeX(POKEMON_OFFSET + Math.round(i * (size + 6)), Math.round(size)) + size / 2;
-            // TODO(visual): check the Pokemon's top lines up with the top of the strip.
-            portrait.draw(c.g(), cx, y + HEIGHT - size * 0.9f, size, !c.left(), c.pokemonPartial());
+            float cx = c.edgeX(StripLayout.POKEMON_X + Math.round(i * (size + 6)), Math.round(size)) + size / 2;
+            portrait.draw(c.g(), cx, cy, size, !c.left(), c.pokemonPartial());
         }
     }
 
     /** Head at the top of the strip, body running down until the strip ends. */
     private void drawTrainer(CardContext c, int y) {
-        int x = c.edgeX(TRAINER_OFFSET, 0);
+        int x = c.edgeX(StripLayout.TRAINER_X, 0);
+        int top = StripLayout.trainerTop(y, c.cfg());
         painter.find(model.entityId()).ifPresentOrElse(
-                e -> painter.paintHangingFrom(c, e, x, y + PAD, TRAINER_SCALE, c.cfg().stanceFor(model.own())),
-                () -> c.g().fill(x - 8, y + PAD, x + 8, y + PAD + 16, 0xFF55607A));
+                e -> painter.paintHangingFrom(c, e, x, top, StripLayout.trainerScale(c.cfg()), c.cfg().stanceFor(model.own())),
+                () -> c.g().fill(x - 8, top, x + 8, top + 16, 0xFF55607A));
     }
 }

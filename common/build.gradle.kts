@@ -25,3 +25,15 @@ dependencies {
     compileOnly("com.google.code.gson:gson:2.11.0")
     compileOnly("net.fabricmc:sponge-mixin:0.15.4+mixin.0.8.7")
 }
+
+// Unit tests cover the pure logic (appearance rules, bar styles, config defaults, strip layout); none needs Minecraft running.
+dependencies {
+    testImplementation(platform("org.junit:junit-bom:5.11.4"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation("com.google.code.gson:gson:2.11.0")
+}
+
+tasks.test {
+    useJUnitPlatform()
+}
