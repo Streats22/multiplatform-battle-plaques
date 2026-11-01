@@ -12,6 +12,8 @@ import java.nio.file.Path;
 
 /** User settings, stored as config/battleplacks.json. Every field is mirrored in preview/index.html. */
 public class PlaqueConfig {
+    /** Your team name, shown to you and to other players with the mod. Empty uses "Team <your name>". */
+    public String teamName = "";
     public boolean enabled = true;
     /** Cards for battles against other players. */
     public boolean includePlayerBattles = true;
@@ -33,7 +35,7 @@ public class PlaqueConfig {
     public boolean stripFades = true;
     public int stripSeconds = 3;
     public boolean introEnabled = false;
-    public int introSeconds = 3;
+    public int introSeconds = 4;
     public Theme theme = Theme.COBBLEMON;
     public Anchor ownAnchor = Anchor.TOP_LEFT;
     public Anchor opponentAnchor = Anchor.TOP_RIGHT;

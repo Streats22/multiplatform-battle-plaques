@@ -5,6 +5,8 @@ import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import net.minecraft.network.chat.Component;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Consumer;
 
 /** One tab of the config screen. Every row is one call here, so the screen class only lists options. */
@@ -40,6 +42,14 @@ final class ConfigPage {
     ConfigPage strings(String label, String tip, List<String> current, List<String> dflt, Consumer<List<String>> save) {
         category.addEntry(entries.startStrList(Component.literal(label), current)
                 .setDefaultValue(dflt).setTooltip(Component.literal(tip)).setSaveConsumer(save).build());
+        return this;
+    }
+
+    /** A text field; {@code error} returns a message to block saving, or empty when the text is fine. */
+    ConfigPage text(String label, String tip, String current, Function<String, Optional<Component>> error, Consumer<String> save) {
+        category.addEntry(entries.startStrField(Component.literal(label), current)
+                .setDefaultValue("").setTooltip(Component.literal(tip))
+                .setErrorSupplier(error).setSaveConsumer(save).build());
         return this;
     }
 

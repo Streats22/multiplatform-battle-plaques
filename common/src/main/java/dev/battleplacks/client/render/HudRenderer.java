@@ -11,29 +11,35 @@ import java.util.List;
 
 /**
  * Lays out one card per trainer in their corner and draws it. A battle runs through up to three phases: the
- * optional intro, the strip (which fades after a few seconds unless disabled), and nothing.
+ * optional full-screen VS intro, the strip (which fades after a few seconds unless disabled), and nothing.
  */
 public final class HudRenderer {
     /** Cobblemon's own tile: top margin and the height of each tile in a side's stack. */
     private static final int COBBLEMON_TOP = 4, COBBLEMON_TILE_STEP = 41;
     private static final float FADE_SECONDS = 1f;
 
-    private final CardFactory factory = new CardFactory(new TrainerEntityPainter());
+    private final TrainerEntityPainter painter = new TrainerEntityPainter();
+    private final CardFactory factory = new CardFactory(painter);
+    private final VsScreen vsScreen = new VsScreen(painter);
 
     /** @param elapsed seconds since the battle started */
     public void render(GuiGraphics g, List<PlaqueModel> models, PlaqueConfig cfg, float partial, float elapsed) {
         float introLength = cfg.introEnabled ? cfg.introSeconds : 0f;
         boolean intro = elapsed < introLength;
         float introProgress = intro ? elapsed / introLength : 0f;
-        float alpha = intro ? 1f : stripAlpha(cfg, elapsed - introLength);
+        Theme.Palette palette = cfg.theme.palette(cfg.opacity);
+        if (intro) {
+            vsScreen.render(g, models, cfg, palette, introProgress, partial);
+            return;
+        }
+        float alpha = stripAlpha(cfg, elapsed - introLength);
         if (alpha <= 0.02f) return;
 
-        Theme.Palette palette = cfg.theme.palette(cfg.opacity);
         AnchorStacker stacker = new AnchorStacker();
 
         for (PlaqueModel model : models) {
             if (model.kind() == PlaqueModel.Kind.WILD && model.active().isEmpty()) continue;
-            List<CardElement> elements = factory.build(model, cfg, intro);
+            List<CardElement> elements = factory.build(model, cfg);
             int height = elements.stream().mapToInt(CardElement::height).sum();
 
             Anchor anchor = cfg.anchorFor(model.own());
@@ -47,7 +53,7 @@ public final class HudRenderer {
             g.pose().pushPose();
             g.pose().scale(cfg.scale, cfg.scale, 1f);
             // The 3D models cannot be made transparent, so while fading the whole card also slides off its edge.
-            float slide = intro ? slideInOffset(introProgress) : (1f - alpha) * (CardContext.WIDTH + 20);
+            float slide = (1f - alpha) * (CardContext.WIDTH + 20);
             g.pose().translate(anchor.isLeft() ? -slide : slide, 0, 0);
             for (CardElement element : elements) {
                 element.draw(ctx, y);
@@ -67,12 +73,5 @@ public final class HudRenderer {
     private static int reservedTop(PlaqueModel model, PlaqueConfig cfg) {
         if (cfg.showTiles) return 0;
         return COBBLEMON_TOP + COBBLEMON_TILE_STEP * Math.max(1, model.active().size()) + cfg.stripOffset - cfg.margin;
-    }
-
-    /** Slides in from the screen edge during the first quarter of the intro, then holds. */
-    private static float slideInOffset(float progress) {
-        float t = Math.min(1f, progress * 4f);
-        float eased = 1f - (1f - t) * (1f - t) * (1f - t);
-        return (1f - eased) * (CardContext.WIDTH + 40);
     }
 }

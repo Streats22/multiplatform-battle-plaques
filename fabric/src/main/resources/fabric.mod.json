@@ -6,8 +6,10 @@
   "description": "Customizable trainer plaques for Cobblemon battles: your player, your party, and your opponent.",
   "authors": ["streats22"],
   "license": "MIT",
-  "environment": "client",
+  "environment": "*",
   "entrypoints": {
+    "main": ["dev.battleplacks.fabric.BattleplacksFabric"],
+    "client": ["dev.battleplacks.fabric.BattleplacksFabricClient"],
     "modmenu": ["dev.battleplacks.fabric.BattleplacksModMenu"]
   },
   "mixins": ["battleplacks.mixins.json"],

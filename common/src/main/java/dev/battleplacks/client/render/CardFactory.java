@@ -14,14 +14,8 @@ final class CardFactory {
         this.painter = painter;
     }
 
-    /** During the intro only the big presentation and the label show; afterwards the compact strip takes over. */
-    List<CardElement> build(PlaqueModel model, PlaqueConfig cfg, boolean intro) {
+    List<CardElement> build(PlaqueModel model, PlaqueConfig cfg) {
         List<CardElement> elements = new ArrayList<>();
-        if (intro) {
-            elements.add(new IntroGroupElement(model, painter));
-            if (cfg.showTrainerName) elements.add(new TeamLabelElement(model));
-            return elements;
-        }
         if (cfg.showTiles) model.active().forEach(a -> elements.add(new TileElement(a)));
         if (cfg.showHead) elements.add(new StripElement(model, painter));
         if (cfg.showParty) {

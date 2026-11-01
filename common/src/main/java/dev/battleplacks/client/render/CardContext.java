@@ -15,6 +15,13 @@ public record CardContext(GuiGraphics g, Font font, PlaqueConfig cfg, Theme.Pale
         return cfg.animatePokemon ? partial : 0f;
     }
 
+    /** Tints following textured draws with an ARGB colour (and the card's fade); call {@link #untint()} afterwards. */
+    public void tint(int argb) {
+        g.setColor(((argb >> 16) & 255) / 255f, ((argb >> 8) & 255) / 255f, (argb & 255) / 255f, alpha);
+    }
+
+    public void untint() { g.setColor(1f, 1f, 1f, 1f); }
+
     /** Applies the card's fade to an ARGB colour. */
     public int fade(int argb) {
         int a = Math.round((argb >>> 24) * alpha);

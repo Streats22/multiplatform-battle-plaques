@@ -1,5 +1,6 @@
 package dev.battleplacks.config.screen;
 
+import dev.battleplacks.Battleplacks;
 import dev.battleplacks.config.Anchor;
 import dev.battleplacks.config.BallStyle;
 import dev.battleplacks.config.PlaqueConfig;
@@ -10,7 +11,10 @@ import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
+import dev.battleplacks.team.TeamNameRules;
+
 import java.util.ArrayList;
+import java.util.Optional;
 
 /**
  * The in-game settings screen (Cloth Config), opened from Mod Menu on Fabric. Defaults come from a fresh
@@ -26,7 +30,10 @@ public final class ConfigScreens {
         ConfigBuilder builder = ConfigBuilder.create()
                 .setParentScreen(parent)
                 .setTitle(Component.literal("Cobblemon - Battleplacks"))
-                .setSavingRunnable(cfg::save);
+                .setSavingRunnable(() -> {
+                    cfg.save();
+                    Battleplacks.get().announceTeamName();
+                });
 
         general(page(builder, "General"), cfg, d);
         trainers(page(builder, "Trainers"), cfg, d);
@@ -42,13 +49,20 @@ public final class ConfigScreens {
     }
 
     private static void general(ConfigPage p, PlaqueConfig c, PlaqueConfig d) {
-        p.toggle("Enabled", "Turn Battleplacks on or off.", c.enabled, d.enabled, v -> c.enabled = v)
+        p.text("Team name", "Shown on your card, and to other players who have the mod. Max 20 characters, no profanity.",
+                 c.teamName, ConfigScreens::teamNameError, v -> c.teamName = TeamNameRules.clean(v))
+         .toggle("Enabled", "Turn Battleplacks on or off.", c.enabled, d.enabled, v -> c.enabled = v)
          .toggle("Own Pokemon tiles", "Draw Battleplacks' own Pokemon tile INSTEAD of Cobblemon's. Off keeps Cobblemon's tile and puts the strip under it.",
                  c.showTiles, d.showTiles, v -> c.showTiles = v)
          .toggle("Player battles", "Show cards when battling other players.",
                  c.includePlayerBattles, d.includePlayerBattles, v -> c.includePlayerBattles = v)
          .toggle("Wild battles", "Show cards against wild Pokemon.",
                  c.includeWildBattles, d.includeWildBattles, v -> c.includeWildBattles = v);
+    }
+
+    private static Optional<net.minecraft.network.chat.Component> teamNameError(String text) {
+        TeamNameRules.Result result = TeamNameRules.validate(text);
+        return result.valid() ? Optional.empty() : Optional.of(net.minecraft.network.chat.Component.literal(result.reason()));
     }
 
     private static void trainers(ConfigPage p, PlaqueConfig c, PlaqueConfig d) {

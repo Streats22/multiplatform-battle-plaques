@@ -43,7 +43,7 @@ final class StripElement implements CardElement {
     /** Pokemon first so the trainer stands in front. The portrait is centred in its square, so the square starts above the strip. */
     private void drawPokemon(CardContext c, int y) {
         int count = model.active().size();
-        float size = count > 1 ? 22 : 28; // about the size of a Cobblemon tile portrait
+        float size = count > 1 ? 17 : 22; // about the size of a Cobblemon tile portrait
         for (int i = 0; i < count; i++) {
             var portrait = model.active().get(i).portrait();
             if (portrait == null) continue;
