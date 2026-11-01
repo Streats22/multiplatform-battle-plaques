@@ -14,6 +14,13 @@ Design reference (from you): Cobblemon's in-battle HUD with a **team card per co
 
 - **VS intro**: optional fullscreen screen shown at battle start (**preview only**, not in the mod).
 
+## Behaviour
+
+- Cobblemon's own tile always stays; Battleplacks draws a strip underneath it (cropped trainer and Pokémon, party bar, team label).
+- The strip fades away after a few seconds (Mods -> Battleplacks -> Timing: "Fade strip", "Strip visible for"). The 3D models cannot be made transparent, so while fading the strip also slides off its screen edge.
+- Optional battle intro (off by default) shows a larger presentation of both trainers first.
+- Textures in `assets/battleplacks/textures/gui/` (`strip.png`, `party_bar.png`, `intro_banner.png`, plus `*_4x.png` masters) can be replaced by a resource pack. Only `strip.png` (optional background) and `party_bar.png` are used so far.
+
 ## Layout
 
 | Path | What |
@@ -25,7 +32,7 @@ Design reference (from you): Cobblemon's in-battle HUD with a **team card per co
 ## How it hooks in
 
 1. `GuiMixin` (vanilla `Gui#render`, TAIL) draws the plaques, which is identical on both loaders.
-2. `CobblemonClientMixin` cancels Cobblemon's own `beforeChatRender` while a battle is active (toggle: `replaceDefaultTiles`).
+2. `CobblemonClientMixin` cancels Cobblemon's own `beforeChatRender` only when Battleplacks' own tile is switched on (`showTiles`); by default Cobblemon's tile stays and the strip is drawn under it.
 3. `CobblemonBattleAdapter` is the only class that reads Cobblemon's client battle classes.
 
 ## Status

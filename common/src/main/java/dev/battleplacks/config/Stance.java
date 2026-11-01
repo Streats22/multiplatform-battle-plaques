@@ -6,7 +6,7 @@ package dev.battleplacks.config;
  */
 public enum Stance {
     STANDING(35f, 0f, false),
-    LEANING(35f, 14f, false),
+    LEANING(40f, 20f, false),
     HERO(20f, 8f, false),
     CROUCHING(35f, 0f, true),
     PROFILE(80f, 0f, false),

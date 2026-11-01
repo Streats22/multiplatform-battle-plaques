@@ -22,13 +22,14 @@ public class PlaqueConfig {
     /** Case-insensitive regexes (plain text works too) tested against the trainer's display name. */
     public List<String> trainerPatterns = new ArrayList<>(
             List.of("Gym Leader", "Leader", "Elite Four", "Champion", "Rival"));
-    /** Cancel Cobblemon's own tiles while a battle is running (needs showTiles to replace them). */
-    public boolean replaceDefaultTiles = false;
-    /** Draw Battleplacks' own Pokémon tile (off by default: the strip sits under Cobblemon's tile instead). */
+    /** Draw Battleplacks' own Pokémon tile INSTEAD of Cobblemon's (off by default: the strip sits under Cobblemon's tile). */
     public boolean showTiles = false;
     /** Extra pixels between Cobblemon's tile and the strip. */
     public int stripOffset = 0;
     /** Short presentation of both trainers when a battle starts. */
+    /** The strip fades away this many seconds after the battle (or the intro) starts; off keeps it on screen. */
+    public boolean stripFades = true;
+    public int stripSeconds = 3;
     public boolean introEnabled = false;
     public int introSeconds = 3;
     public Theme theme = Theme.COBBLEMON;
@@ -43,7 +44,7 @@ public class PlaqueConfig {
     public int customFacing = 35;
     public int customLean = 10;
     /** Draw the strip's background texture (assets/battleplacks/textures/gui/strip.png, replaceable by a resource pack). */
-    public boolean showStripBackground = true;
+    public boolean showStripBackground = false;
     public float scale = 1.0f;
     public int margin = 8;
     public boolean showHead = true;

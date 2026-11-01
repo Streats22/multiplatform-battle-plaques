@@ -15,6 +15,6 @@ final class TeamLabelElement implements CardElement {
 
     @Override
     public void draw(CardContext c, int y) {
-        c.g().drawString(c.font(), label, c.textX(label, 0), y + 3, 0xFFFFFFFF, true);
+        c.g().drawString(c.font(), label, c.textX(label, 0), y + 3, c.fade(0xFFFFFFFF), true);
     }
 }

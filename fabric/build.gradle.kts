@@ -42,6 +42,7 @@ dependencies {
 
 // Package the shared code (and the mixin config) from :common into this jar; remapJar then maps it to production names.
 tasks.jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from(project(":common").sourceSets.main.get().output)
 }
 
@@ -54,6 +55,9 @@ configurations.configureEach {
 }
 
 tasks.processResources {
+    // Shared assets (textures, mixin config) live in :common; Fabric only finds a mod's assets in its own resources
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from(project(":common").file("src/main/resources"))
     inputs.property("version", project.version)
     filesMatching("fabric.mod.json") { expand("version" to project.version) }
 }

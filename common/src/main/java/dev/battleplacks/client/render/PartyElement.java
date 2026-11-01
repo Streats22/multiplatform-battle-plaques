@@ -19,13 +19,17 @@ abstract class PartyElement implements CardElement {
     @Override
     public final void draw(CardContext c, int y) {
         if (slots.isEmpty()) return;
-        drawBackground(c, y + 2);
+        int rowY = y + rowOffset();
+        drawBackground(c, rowY);
         for (int i = 0; i < slots.size(); i++) {
             // right-hand cards read from the screen edge inwards, so the order is mirrored
             Slot slot = slots.get(c.left() ? i : slots.size() - 1 - i);
-            drawSlot(c, slot, i, y + 2);
+            drawSlot(c, slot, i, rowY);
         }
     }
+
+    /** Pips follow the original breathing room; the compact bar sits directly beneath the model strip. */
+    protected int rowOffset() { return 2; }
 
     protected int count() { return slots.size(); }
 

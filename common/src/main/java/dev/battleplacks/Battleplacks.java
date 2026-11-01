@@ -2,7 +2,7 @@ package dev.battleplacks;
 
 import dev.battleplacks.client.BattleFilter;
 import dev.battleplacks.client.BattleSource;
-import dev.battleplacks.client.IntroTimer;
+import dev.battleplacks.client.BattleClock;
 import dev.battleplacks.client.PlaqueModel;
 import dev.battleplacks.client.cobblemon.CobblemonBattleSource;
 import dev.battleplacks.client.render.HudRenderer;
@@ -23,7 +23,7 @@ public final class Battleplacks {
     private final BattleSource source;
     private final BattleFilter filter;
     private final HudRenderer renderer;
-    private final IntroTimer intro = new IntroTimer();
+    private final BattleClock clock = new BattleClock();
     private String lastLogged = "";
 
     Battleplacks(BattleSource source, BattleFilter filter, HudRenderer renderer) {
@@ -37,17 +37,13 @@ public final class Battleplacks {
     /** Draws the cards for the current battle, if it is one we handle. */
     public void render(GuiGraphics graphics, float partialTick) {
         PlaqueConfig cfg = PlaqueConfig.get();
-        handledBattle(cfg).ifPresent(models -> renderer.render(graphics, models, cfg, partialTick, introProgress(cfg)));
-    }
-
-    private float introProgress(PlaqueConfig cfg) {
-        return cfg.introEnabled ? intro.progress(source.battleId(), cfg.introSeconds) : -1f;
+        handledBattle(cfg).ifPresent(models -> renderer.render(graphics, models, cfg, partialTick, clock.elapsedSeconds(source.battleId())));
     }
 
     /** True while Cobblemon's own battle tiles should be suppressed (only for battles we draw). */
     public boolean replacesDefaultTiles() {
         PlaqueConfig cfg = PlaqueConfig.get();
-        return cfg.replaceDefaultTiles && cfg.showTiles && handledBattle(cfg).isPresent();
+        return cfg.showTiles && handledBattle(cfg).isPresent();
     }
 
     private Optional<List<PlaqueModel>> handledBattle(PlaqueConfig cfg) {

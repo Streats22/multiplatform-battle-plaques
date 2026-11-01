@@ -31,7 +31,7 @@ public final class ConfigScreens {
         general(page(builder, "General"), cfg, d);
         trainers(page(builder, "Trainers"), cfg, d);
         layout(page(builder, "Layout"), cfg, d);
-        intro(page(builder, "Intro"), cfg, d);
+        intro(page(builder, "Timing"), cfg, d);
         look(page(builder, "Look"), cfg, d);
         elements(page(builder, "Elements"), cfg, d);
         return builder.build();
@@ -43,10 +43,8 @@ public final class ConfigScreens {
 
     private static void general(ConfigPage p, PlaqueConfig c, PlaqueConfig d) {
         p.toggle("Enabled", "Turn Battleplacks on or off.", c.enabled, d.enabled, v -> c.enabled = v)
-         .toggle("Own Pokemon tiles", "Draw Battleplacks' own Pokemon tile. Off keeps Cobblemon's tile and puts the strip under it.",
+         .toggle("Own Pokemon tiles", "Draw Battleplacks' own Pokemon tile INSTEAD of Cobblemon's. Off keeps Cobblemon's tile and puts the strip under it.",
                  c.showTiles, d.showTiles, v -> c.showTiles = v)
-         .toggle("Replace Cobblemon's tiles", "Hide Cobblemon's own tiles (only when Own Pokemon tiles is on).",
-                 c.replaceDefaultTiles, d.replaceDefaultTiles, v -> c.replaceDefaultTiles = v)
          .toggle("Player battles", "Show cards when battling other players.",
                  c.includePlayerBattles, d.includePlayerBattles, v -> c.includePlayerBattles = v)
          .toggle("Wild battles", "Show cards against wild Pokemon.",
@@ -75,7 +73,10 @@ public final class ConfigScreens {
     }
 
     private static void intro(ConfigPage p, PlaqueConfig c, PlaqueConfig d) {
-        p.toggle("Battle intro", "Show a short presentation of both trainers when a battle starts.",
+        p.toggle("Fade strip", "Make the strip fade away after a few seconds instead of staying on screen.",
+                 c.stripFades, d.stripFades, v -> c.stripFades = v)
+         .slider("Strip visible for", "Seconds the strip stays before it fades.", c.stripSeconds, d.stripSeconds, 1, 15, " s", v -> c.stripSeconds = v)
+         .toggle("Battle intro", "Show a short presentation of both trainers when a battle starts.",
                  c.introEnabled, d.introEnabled, v -> c.introEnabled = v)
          .slider("Intro length", "How long the intro stays on screen.", c.introSeconds, d.introSeconds, 1, 8, " s", v -> c.introSeconds = v);
     }
