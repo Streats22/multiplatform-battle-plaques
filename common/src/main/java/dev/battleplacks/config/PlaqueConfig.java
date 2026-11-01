@@ -28,6 +28,8 @@ public class PlaqueConfig {
     public int stripOffset = 0;
     /** Short presentation of both trainers when a battle starts. */
     /** The strip fades away this many seconds after the battle (or the intro) starts; off keeps it on screen. */
+    /** Animate the Pokémon models. Off shows a still pose, like a screenshot. */
+    public boolean animatePokemon = false;
     public boolean stripFades = true;
     public int stripSeconds = 3;
     public boolean introEnabled = false;

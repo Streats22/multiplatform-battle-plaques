@@ -9,11 +9,14 @@ import dev.battleplacks.client.PlaqueModel.PortraitDrawer;
 final class PokemonPortraits {
     /** BattleOverlay uses scale 18 for a 28 px portrait. */
     private static final float SCALE_PER_SIZE = 0.64f;
+    /** The clip square is larger than the nominal size so the whole model shows. */
+    private static final float CLIP_PER_SIZE = 1.8f;
 
     PortraitDrawer of(ClientBattlePokemon pokemon) {
         return (g, cx, cy, size, reversed, partial) -> {
             PoseStack pose = g.pose();
-            g.enableScissor((int) (cx - size / 2), (int) (cy - size / 2), (int) (cx + size / 2), (int) (cy + size / 2));
+            float clip = size * CLIP_PER_SIZE;
+            g.enableScissor((int) (cx - clip / 2), (int) (cy - clip / 2), (int) (cx + clip / 2), (int) (cy + clip / 2));
             pose.pushPose();
             pose.translate(cx, cy, 0);
             // TODO(visual): vertical offset and scale of the model inside the frame need an in-game check.

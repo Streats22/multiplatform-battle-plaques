@@ -12,7 +12,7 @@ final class StripElement implements CardElement {
     private static final ResourceLocation BACKGROUND =
             ResourceLocation.fromNamespaceAndPath("battleplacks", "textures/gui/strip.png");
     private static final int HEIGHT = 44, PAD = 3;
-    private static final int TRAINER_OFFSET = 28, POKEMON_OFFSET = 46;
+    private static final int TRAINER_OFFSET = 28, POKEMON_OFFSET = 44;
     private static final float TRAINER_SCALE = 50f;
 
     private final PlaqueModel model;
@@ -43,13 +43,13 @@ final class StripElement implements CardElement {
     /** Pokemon first so the trainer stands in front. The portrait is centred in its square, so the square starts above the strip. */
     private void drawPokemon(CardContext c, int y) {
         int count = model.active().size();
-        float size = count > 1 ? 40 : 52;
+        float size = count > 1 ? 22 : 28; // about the size of a Cobblemon tile portrait
         for (int i = 0; i < count; i++) {
             var portrait = model.active().get(i).portrait();
             if (portrait == null) continue;
-            float cx = c.edgeX(POKEMON_OFFSET + Math.round(i * (size - 14)), Math.round(size)) + size / 2;
+            float cx = c.edgeX(POKEMON_OFFSET + Math.round(i * (size + 6)), Math.round(size)) + size / 2;
             // TODO(visual): check the Pokemon's top lines up with the top of the strip.
-            portrait.draw(c.g(), cx, y + size / 2 - 6, size, !c.left(), c.partial());
+            portrait.draw(c.g(), cx, y + HEIGHT - size * 0.9f, size, !c.left(), c.pokemonPartial());
         }
     }
 

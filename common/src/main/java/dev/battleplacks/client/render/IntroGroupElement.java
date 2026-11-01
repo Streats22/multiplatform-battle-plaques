@@ -26,12 +26,12 @@ final class IntroGroupElement implements CardElement {
                 () -> c.g().fill(trainerX - 8, top + HEIGHT - 40, trainerX + 8, top + HEIGHT - 24, 0xFF55607A));
 
         int count = model.active().size();
-        float size = count > 1 ? 34 : 46;
+        float size = count > 1 ? 26 : 34;
         for (int i = 0; i < count; i++) {
             var portrait = model.active().get(i).portrait();
             if (portrait == null) continue;
             float cx = c.edgeX(POKEMON_OFFSET + Math.round(i * (size - 6)), Math.round(size)) + size / 2;
-            portrait.draw(c.g(), cx, top + HEIGHT - size / 2 - 2, size, !c.left(), c.partial());
+            portrait.draw(c.g(), cx, top + HEIGHT - size / 2 - 2, size, !c.left(), c.pokemonPartial());
         }
     }
 }

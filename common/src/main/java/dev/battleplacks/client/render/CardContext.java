@@ -10,6 +10,11 @@ public record CardContext(GuiGraphics g, Font font, PlaqueConfig cfg, Theme.Pale
                           boolean left, float partial, int x, float alpha) {
     public static final int WIDTH = 140;
 
+    /** Partial tick for Pokémon models: 0 keeps them still unless animation is switched on. */
+    public float pokemonPartial() {
+        return cfg.animatePokemon ? partial : 0f;
+    }
+
     /** Applies the card's fade to an ARGB colour. */
     public int fade(int argb) {
         int a = Math.round((argb >>> 24) * alpha);

@@ -84,6 +84,7 @@ public final class ConfigScreens {
     private static void look(ConfigPage p, PlaqueConfig c, PlaqueConfig d) {
         p.choice("Theme", "Colour scheme.", Theme.class, c.theme, d.theme, v -> c.theme = v)
          .choice("Party style", "PIPS is the segmented bar, BALLS draws poke balls.", BallStyle.class, c.ballStyle, d.ballStyle, v -> c.ballStyle = v)
+         .toggle("Animate Pokemon", "Off shows a still pose of the Pokemon.", c.animatePokemon, d.animatePokemon, v -> c.animatePokemon = v)
          .slider("Opacity", "Panel opacity.", c.opacity, d.opacity, 20, 100, "%", v -> c.opacity = v)
          .colour("Your accent", "Override the accent colour on your card (0 = theme colour).", c.accentOwn, v -> c.accentOwn = v)
          .colour("Opponent accent", "Override the accent colour on the opponent's card (0 = theme colour).", c.accentOpponent, v -> c.accentOpponent = v);
