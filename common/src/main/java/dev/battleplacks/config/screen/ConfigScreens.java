@@ -3,6 +3,7 @@ package dev.battleplacks.config.screen;
 import dev.battleplacks.Battleplacks;
 import dev.battleplacks.config.Anchor;
 import dev.battleplacks.config.BallStyle;
+import dev.battleplacks.config.LabelPosition;
 import dev.battleplacks.config.PlaqueConfig;
 import dev.battleplacks.config.Stance;
 import dev.battleplacks.config.Theme;
@@ -32,7 +33,7 @@ public final class ConfigScreens {
                 .setTitle(Component.literal("Cobblemon - Battleplacks"))
                 .setSavingRunnable(() -> {
                     cfg.save();
-                    Battleplacks.get().announceTeamName();
+                    Battleplacks.get().announceAppearance();
                 });
 
         general(page(builder, "General"), cfg, d);
@@ -40,6 +41,7 @@ public final class ConfigScreens {
         layout(page(builder, "Layout"), cfg, d);
         intro(page(builder, "Timing"), cfg, d);
         look(page(builder, "Look"), cfg, d);
+        strip(page(builder, "Strip"), cfg, d);
         elements(page(builder, "Elements"), cfg, d);
         return builder.build();
     }
@@ -97,11 +99,20 @@ public final class ConfigScreens {
 
     private static void look(ConfigPage p, PlaqueConfig c, PlaqueConfig d) {
         p.choice("Theme", "Colour scheme.", Theme.class, c.theme, d.theme, v -> c.theme = v)
-         .choice("Party style", "PIPS is the segmented bar, BALLS draws poke balls.", BallStyle.class, c.ballStyle, d.ballStyle, v -> c.ballStyle = v)
+         .choice("Bar style", "PIPS: Cobblemon's bar with slanted pips. SEGMENTED: plain bar. BALLS: poke balls. Other players with the mod see this style on your card.",
+                 BallStyle.class, c.ballStyle, d.ballStyle, v -> c.ballStyle = v)
+         .choice("Label position", "Show the team label above or below the party bar.", LabelPosition.class, c.labelPosition, d.labelPosition, v -> c.labelPosition = v)
          .toggle("Animate Pokemon", "Off shows a still pose of the Pokemon.", c.animatePokemon, d.animatePokemon, v -> c.animatePokemon = v)
          .slider("Opacity", "Panel opacity.", c.opacity, d.opacity, 20, 100, "%", v -> c.opacity = v)
-         .colour("Your accent", "Override the accent colour on your card (0 = theme colour).", c.accentOwn, v -> c.accentOwn = v)
+         .colour("Your accent", "Accent colour of your card. Other players with the mod see it too (0 = theme colour).", c.accentOwn, v -> c.accentOwn = v)
          .colour("Opponent accent", "Override the accent colour on the opponent's card (0 = theme colour).", c.accentOpponent, v -> c.accentOpponent = v);
+    }
+
+    private static void strip(ConfigPage p, PlaqueConfig c, PlaqueConfig d) {
+        p.slider("Pokemon size", "Size of the Pokemon in the strip.", c.pokemonSize, d.pokemonSize, PlaqueConfig.MIN_SIZE, PlaqueConfig.MAX_SIZE, "%", v -> c.pokemonSize = v)
+         .slider("Pokemon height", "Pixels the Pokemon is raised (negative lowers it).", c.pokemonLift, d.pokemonLift, -PlaqueConfig.MAX_LIFT, PlaqueConfig.MAX_LIFT, " px", v -> c.pokemonLift = v)
+         .slider("Trainer size", "Size of the 3D trainer in the strip.", c.trainerSize, d.trainerSize, PlaqueConfig.MIN_SIZE, PlaqueConfig.MAX_SIZE, "%", v -> c.trainerSize = v)
+         .slider("Trainer height", "Pixels the trainer is raised (negative lowers it).", c.trainerLift, d.trainerLift, -PlaqueConfig.MAX_LIFT, PlaqueConfig.MAX_LIFT, " px", v -> c.trainerLift = v);
     }
 
     private static void elements(ConfigPage p, PlaqueConfig c, PlaqueConfig d) {

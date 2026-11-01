@@ -18,9 +18,9 @@ dependencies {
 
     implementation(project(":common", configuration = "namedElements"))
 
-    // Mod Menu adds the config button; Cloth Config draws the screen (jar supplied in libs/)
-    modCompileOnly(files(rootProject.file("libs/modmenu-11.0.5.jar")))
-    modLocalRuntime(files(rootProject.file("libs/modmenu-11.0.5.jar")))
+    // Mod Menu adds the config button; Cloth Config draws the screen (both from Maven)
+    modCompileOnly("com.terraformersmc:modmenu:${property("modmenu_version")}")
+    modLocalRuntime("com.terraformersmc:modmenu:${property("modmenu_version")}")
     modLocalRuntime("me.shedaniel.cloth:cloth-config-fabric:${property("cloth_config_version")}") {
         exclude(group = "net.fabricmc.fabric-api")
     }
@@ -31,9 +31,12 @@ dependencies {
     // RCT API needs Architectury API 13.0.2+ and Fabric Loader 0.18+
     modLocalRuntime("dev.architectury:architectury-fabric:${property("architectury_api_version")}")
 
-    // Radical Cobblemon Trainers, so RCT trainer battles can be tested in the dev client (jars supplied in libs/)
-    modLocalRuntime(files(rootProject.file("libs/rctapi-fabric-1.21.1-0.16.2-beta.jar")))
-    modLocalRuntime(files(rootProject.file("libs/rctmod-fabric-1.21.1-0.19.2-beta.jar")))
+    // Radical Cobblemon Trainers, so RCT trainer battles can be tested in the dev client. The jars are not in the
+    // repo (libs/ is gitignored), so they are only added when they exist; the build works without them.
+    listOf("rctapi-fabric-1.21.1-0.16.2-beta.jar", "rctmod-fabric-1.21.1-0.19.2-beta.jar")
+        .map { rootProject.file("libs/$it") }
+        .filter { it.exists() }
+        .forEach { modLocalRuntime(files(it)) }
     modLocalRuntime("maven.modrinth:forge-config-api-port:v21.1.6-1.21.1-Fabric")
     // RCT reads its config with Night Config, which Forge Config API Port does not bring along in a dev environment
     runtimeOnly("com.electronwill.night-config:core:3.8.1")

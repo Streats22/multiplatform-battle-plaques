@@ -39,7 +39,8 @@ public final class HudRenderer {
 
         for (PlaqueModel model : models) {
             if (model.kind() == PlaqueModel.Kind.WILD && model.active().isEmpty()) continue;
-            List<CardElement> elements = factory.build(model, cfg);
+            CardLook look = CardLook.of(model, cfg, palette);
+            List<CardElement> elements = factory.build(model, cfg, look);
             int height = elements.stream().mapToInt(CardElement::height).sum();
 
             Anchor anchor = cfg.anchorFor(model.own());
@@ -49,7 +50,7 @@ public final class HudRenderer {
                     : Math.round(g.guiHeight() / cfg.scale) - height - cfg.margin - used;
 
             CardContext ctx = new CardContext(g, Minecraft.getInstance().font, cfg, palette,
-                    palette.accent(model.own(), cfg), anchor.isLeft(), partial, x, alpha);
+                    look.accent(), anchor.isLeft(), partial, x, alpha);
             g.pose().pushPose();
             g.pose().scale(cfg.scale, cfg.scale, 1f);
             // The 3D models cannot be made transparent, so while fading the whole card also slides off its edge.

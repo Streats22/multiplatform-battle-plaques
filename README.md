@@ -21,6 +21,33 @@ Design reference (from you): Cobblemon's in-battle HUD with a **team card per co
 - Optional battle intro (off by default) shows a larger presentation of both trainers first.
 - Textures in `assets/battleplacks/textures/gui/` (`strip.png`, `party_bar.png`, `intro_banner.png`, plus `*_4x.png` masters) can be replaced by a resource pack. Only `strip.png` (optional background) and `party_bar.png` are used so far.
 
+## Customizing your look
+
+Everything below is in the Cloth Config screen. Three ways to open it, also during a battle:
+
+- **Mod Menu** -> Battleplacks -> config button
+- **Key binding** "Open Battleplacks settings" (Controls -> Battleplacks). **Unbound by default**; a key binding only fires while no screen is open, so with Cobblemon's battle menu up use the command instead.
+- **Command** `/battleplacks config` (client-side, works in chat during a battle; the screen opens on top of the battle screen and returns to it when closed)
+
+| Option (page) | What | Default |
+|---|---|---|
+| Team name (General) | Label text, max 20 characters, profanity filtered. Empty shows "Team <name>" | empty |
+| Your accent (Look) | Accent colour of your party bar and card. 0 = theme colour | 0 (theme) |
+| Bar style (Look) | `PIPS` Cobblemon's own bar with slanted pips, `SEGMENTED` plain bar with straight segments, `BALLS` poke balls | `PIPS` |
+| Label position (Look) | Team label `ABOVE` or `BELOW` the party bar | `BELOW` |
+| Pokemon size (Strip) | Pokemon in the strip, % of the base size | 100% |
+| Pokemon height (Strip) | Pixels the Pokemon is raised (negative lowers it) | 11 px |
+| Trainer size (Strip) | 3D trainer, % of the base size | 100% |
+| Trainer height (Strip) | Pixels the trainer is raised (negative lowers it) | 0 px |
+
+The Pokemon and trainer values are there because their right values can only be judged in-game; tune them and send the numbers back if the defaults are off.
+
+### What other players see
+
+Your team name, accent colour and bar style are shared with the other players in the battle (label position and the size/height values stay local). Each player's card is drawn with *their* shared look; if none was received (they lack the mod, or the server does not have Battleplacks), their card uses your theme colour and your bar style. NPC trainers (RCT) always use theme colours.
+
+Sharing needs Battleplacks on the server too (it works in single player). The server and every receiving client validate the same way: the sender's own UUID is used (never one from the packet), the name must pass the length and profanity rules (otherwise it falls back to the default label), the colour must be a plain RGB value (otherwise the theme colour is used) and an unknown bar style becomes `PIPS`. Rules live in `team/AppearanceRules`.
+
 ## Layout
 
 | Path | What |
@@ -46,13 +73,14 @@ Design reference (from you): Cobblemon's in-battle HUD with a **team card per co
 
 ## Local jars (not in the repo)
 
-`libs/` is not in the repo (it holds large third-party jars). For the Fabric dev client put these in `libs/`: `rctapi-fabric-1.21.1-0.16.2-beta.jar`, `rctmod-fabric-1.21.1-0.19.2-beta.jar`, `modmenu-11.0.5.jar`. Cobblemon, Fabric API, Architectury API and Cloth Config come from Maven. The trainer pack `MoreRadicalTrainers1.8.zip` goes in a world's `datapacks` folder.
+`libs/` is not in the repo (it holds large third-party jars) and the build works without it. Only for RCT trainer battles in the Fabric dev client, put `rctapi-fabric-1.21.1-0.16.2-beta.jar` and `rctmod-fabric-1.21.1-0.19.2-beta.jar` in `libs/`; they are added when the files exist. Cobblemon, Fabric API, Architectury API, Cloth Config and Mod Menu (`com.terraformersmc:modmenu:11.0.5`) come from Maven. The trainer pack `MoreRadicalTrainers1.8.zip` goes in a world's `datapacks` folder.
 
 ## Build
 
 ```bash
 export JAVA_HOME=/opt/homebrew/opt/openjdk@21 GRADLE_USER_HOME="$PWD/.gradle-home"
-<gradle 9.3.1>/bin/gradle --no-daemon :fabric:build   # output: fabric/build/libs/
+./gradlew --no-daemon :fabric:build   # output: fabric/build/libs/ (wrapper pins Gradle 9.3.1)
+./gradlew :common:test                # unit tests for the pure logic
 ```
 
 ## Install to test (Fabric)

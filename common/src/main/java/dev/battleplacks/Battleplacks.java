@@ -7,7 +7,7 @@ import dev.battleplacks.client.PlaqueModel;
 import dev.battleplacks.client.cobblemon.CobblemonBattleSource;
 import dev.battleplacks.client.render.HudRenderer;
 import dev.battleplacks.config.PlaqueConfig;
-import dev.battleplacks.team.TeamNameSync;
+import dev.battleplacks.team.AppearanceSync;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import org.slf4j.Logger;
@@ -26,7 +26,7 @@ public final class Battleplacks {
     private final HudRenderer renderer;
     private final BattleClock clock = new BattleClock();
     private String lastLogged = "";
-    private TeamNameSync teamNameSync;
+    private AppearanceSync appearanceSync;
 
     Battleplacks(BattleSource source, BattleFilter filter, HudRenderer renderer) {
         this.source = source;
@@ -37,11 +37,11 @@ public final class Battleplacks {
     public static Battleplacks get() { return INSTANCE; }
 
     /** Set by the loader entry point once it can send packets. */
-    public void setTeamNameSync(TeamNameSync sync) { this.teamNameSync = sync; }
+    public void setAppearanceSync(AppearanceSync sync) { this.appearanceSync = sync; }
 
-    /** Tells the server (and so other players) our current team name. Safe to call when there is no server mod. */
-    public void announceTeamName() {
-        if (teamNameSync != null) teamNameSync.announce(PlaqueConfig.get().teamName);
+    /** Tells the server (and so other players) our current appearance. Safe to call when there is no server mod. */
+    public void announceAppearance() {
+        if (appearanceSync != null) appearanceSync.announce(PlaqueConfig.get().appearance());
     }
 
     /** Draws the cards for the current battle, if it is one we handle. */

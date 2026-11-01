@@ -2,6 +2,9 @@ package dev.battleplacks.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import dev.battleplacks.team.Appearance;
+import dev.battleplacks.team.AppearanceRules;
+import dev.battleplacks.team.TeamNameRules;
 import net.minecraft.client.Minecraft;
 
 import java.io.IOException;
@@ -39,8 +42,16 @@ public class PlaqueConfig {
     public Theme theme = Theme.COBBLEMON;
     public Anchor ownAnchor = Anchor.TOP_LEFT;
     public Anchor opponentAnchor = Anchor.TOP_RIGHT;
-    /** PIPS is the segmented party bar (default); BALLS draws poke balls. */
+    /** Bar style: PIPS (Cobblemon's bar with slanted pips, default), SEGMENTED (plain bar) or BALLS. Shared with other players. */
     public BallStyle ballStyle = BallStyle.PIPS;
+    /** Team label above or below the party bar. */
+    public LabelPosition labelPosition = LabelPosition.BELOW;
+    /** Pokemon in the strip: size in % of the base size, and how many pixels it is raised (negative lowers it). */
+    public int pokemonSize = 100;
+    public int pokemonLift = 11;
+    /** 3D trainer in the strip: size in % and pixels raised. */
+    public int trainerSize = 100;
+    public int trainerLift = 0;
     /** Pose of the 3D trainer on each side. */
     public Stance ownStance = Stance.LEANING;
     public Stance opponentStance = Stance.STANDING;
@@ -62,9 +73,36 @@ public class PlaqueConfig {
     public boolean compact = false;
     /** 0-100 */
     public int opacity = 92;
-    /** ARGB overrides; 0 means "use theme default". */
+    /** ARGB overrides; 0 means "use theme default". accentOwn is also the accent other players see on your card. */
     public int accentOwn = 0;
     public int accentOpponent = 0;
+
+    /** What other players should see: team name, accent colour and bar style. Validated like everything that is shared. */
+    public Appearance appearance() {
+        return AppearanceRules.sanitize(teamName, AppearanceRules.accentFromConfig(accentOwn), ballStyle.id());
+    }
+
+    /** Repairs a loaded or hand-edited config: missing enums (Gson leaves them null) and out-of-range numbers. */
+    public PlaqueConfig sanitize() {
+        PlaqueConfig d = new PlaqueConfig();
+        teamName = TeamNameRules.clean(teamName);
+        if (trainerFilterMode == null) trainerFilterMode = d.trainerFilterMode;
+        if (trainerPatterns == null) trainerPatterns = new ArrayList<>(d.trainerPatterns);
+        if (theme == null) theme = d.theme;
+        if (ownAnchor == null) ownAnchor = d.ownAnchor;
+        if (opponentAnchor == null) opponentAnchor = d.opponentAnchor;
+        if (ballStyle == null) ballStyle = d.ballStyle;
+        if (labelPosition == null) labelPosition = d.labelPosition;
+        if (ownStance == null) ownStance = d.ownStance;
+        if (opponentStance == null) opponentStance = d.opponentStance;
+        pokemonSize = Math.max(MIN_SIZE, Math.min(MAX_SIZE, pokemonSize));
+        trainerSize = Math.max(MIN_SIZE, Math.min(MAX_SIZE, trainerSize));
+        pokemonLift = Math.max(-MAX_LIFT, Math.min(MAX_LIFT, pokemonLift));
+        trainerLift = Math.max(-MAX_LIFT, Math.min(MAX_LIFT, trainerLift));
+        return this;
+    }
+
+    public static final int MIN_SIZE = 50, MAX_SIZE = 200, MAX_LIFT = 40;
 
     public Anchor anchorFor(boolean own) { return own ? ownAnchor : opponentAnchor; }
 
@@ -87,7 +125,7 @@ public class PlaqueConfig {
             Path f = file();
             if (Files.exists(f)) {
                 PlaqueConfig c = GSON.fromJson(Files.readString(f), PlaqueConfig.class);
-                if (c != null) return c;
+                if (c != null) return c.sanitize();
             }
         } catch (Exception ignored) {
             // fall through to defaults on a missing or corrupt file
