@@ -1,0 +1,27 @@
+modLoader = "javafml"
+loaderVersion = "[1,)"
+license = "MIT"
+
+[[mods]]
+modId = "battleplacks"
+version = "${version}"
+displayName = "Cobblemon - Battleplacks"
+authors = "streats22"
+description = "Customizable trainer plaques for Cobblemon battles: your player, your party, and your opponent."
+
+[[mixins]]
+config = "battleplacks.mixins.json"
+
+[[dependencies.battleplacks]]
+modId = "neoforge"
+type = "required"
+versionRange = "[21.1,)"
+ordering = "NONE"
+side = "CLIENT"
+
+[[dependencies.battleplacks]]
+modId = "cobblemon"
+type = "required"
+versionRange = "*"
+ordering = "AFTER"
+side = "CLIENT"

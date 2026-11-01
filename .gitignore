@@ -1,0 +1,13 @@
+libs/
+.gradle/
+.gradle-home/
+build/
+*/build/
+fabric/run/
+neoforge/run/
+dist/
+*.log
+.claude/
+.idea/
+*.iml
+.DS_Store

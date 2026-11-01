@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Battleplacks Preview</title>
+<style>
+  :root {
+    --bg: #14161c; --panel: #1d2029; --edge: #2c303c; --text: #e8eaf0; --muted: #98a0b3; --accent: #32cbff;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.4 system-ui, sans-serif; }
+  header { padding: 16px 20px 0; }
+  h1 { font-size: 18px; margin: 0 0 2px; }
+  header p { margin: 0; color: var(--muted); font-size: 13px; }
+  main { display: grid; grid-template-columns: 1fr 280px; gap: 16px; padding: 16px 20px 24px; align-items: start; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+
+  /* ---- fake Minecraft scene ---- */
+  .stage { position: relative; aspect-ratio: 16/9; width: 100%; border: 2px solid var(--edge); border-radius: 8px;
+    overflow: hidden; background: linear-gradient(#8fd0ff 0 46%, #7cbd4d 46% 100%); image-rendering: pixelated; container-type: inline-size; }
+  .hills { position: absolute; left: 0; right: 0; top: 36%; height: 14%;
+    background: repeating-linear-gradient(90deg, #5aa63a 0 8%, #69b845 8% 14%); opacity: .8; }
+  .mon { position: absolute; display: grid; place-items: center; font-weight: 700; color: #fff; border-radius: 12%;
+    text-shadow: 0 1px 0 rgba(0,0,0,.4); box-shadow: 0 6px 0 rgba(0,0,0,.18); }
+  .hotbar { position: absolute; bottom: 1.2%; left: 50%; transform: translateX(-50%); display: flex; gap: 2px;
+    background: rgba(0,0,0,.45); padding: 3px; border: 2px solid #1b1b1b; }
+  .hotbar i { width: 4.2cqw; height: 4.2cqw; background: rgba(150,150,150,.35); border: 2px solid #3b3b3b; }
+
+  /* ---- plaque (units are cqw so the whole HUD scales with the stage like a GUI scale) ---- */
+  .plaque { position: absolute; width: calc(150 * var(--u) * var(--scale)); padding: calc(4 * var(--u) * var(--scale));
+    padding-left: calc(8 * var(--u) * var(--scale)); font-size: calc(9 * var(--u) * var(--scale)); line-height: 1.15;
+    background: var(--p-bg); color: var(--p-text); border: calc(1 * var(--u) * var(--scale)) solid var(--p-edge);
+    border-left: calc(3 * var(--u) * var(--scale)) solid var(--accent-c); font-family: "Courier New", ui-monospace, monospace;
+    font-weight: 700; opacity: var(--opacity); }
+  .stage { --u: 0.234cqw; } /* 1 GUI unit; a 854px window at GUI scale 2 is ~427 units wide */
+  .trainer { display: flex; gap: calc(4 * var(--u) * var(--scale)); align-items: center; min-height: calc(18 * var(--u) * var(--scale)); }
+  .compact .trainer { min-height: calc(12 * var(--u) * var(--scale)); }
+  .face { width: calc(18 * var(--u) * var(--scale)); height: calc(18 * var(--u) * var(--scale)); flex: none; position: relative;
+    background: var(--skin); }
+  .compact .face { width: calc(12 * var(--u) * var(--scale)); height: calc(12 * var(--u) * var(--scale)); }
+  .face::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 36%; background: var(--hair); }
+  .face::after { content: ""; position: absolute; left: 18%; right: 18%; top: 50%; height: 14%; background: #2b2b3a;
+    box-shadow: 0 0 0 0 transparent; }
+  .tname { display: block; }
+  .balls { display: flex; gap: calc(2 * var(--u) * var(--scale)); margin-top: calc(2 * var(--u) * var(--scale)); }
+  .ball { width: calc(8 * var(--u) * var(--scale)); height: calc(8 * var(--u) * var(--scale)); border-radius: 50%; position: relative;
+    border: calc(1 * var(--u) * var(--scale)) solid #111; background: linear-gradient(#e53935 48%, #111 48% 56%, #f2f2f2 56%); }
+  .ball::after { content: ""; position: absolute; inset: 28%; border-radius: 50%; background: var(--c); border: 1px solid #111; }
+  .ball.healthy { --c: #4ade80; } .ball.status { --c: #facc15; }
+  .ball.fainted { --c: #6b7280; background: linear-gradient(#6b7280 48%, #111 48% 56%, #6b7280 56%); filter: grayscale(.4); }
+  .ball.unknown { --c: #3b4252; background: #3b4252; }
+  .pips .ball { width: calc(6 * var(--u) * var(--scale)); height: calc(3 * var(--u) * var(--scale)); border-radius: 0; border: 0;
+    background: var(--c); margin-top: calc(3 * var(--u) * var(--scale)); } .pips .ball::after { display: none; }
+  .active { margin-top: calc(4 * var(--u) * var(--scale)); display: grid; grid-template-columns: calc(26 * var(--u) * var(--scale)) 1fr;
+    gap: calc(5 * var(--u) * var(--scale)); align-items: center; }
+  .compact .active { grid-template-columns: calc(18 * var(--u) * var(--scale)) 1fr; margin-top: calc(2 * var(--u) * var(--scale)); }
+  .portrait { aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; font-size: 1.3em; color: #fff;
+    border: calc(1 * var(--u) * var(--scale)) solid rgba(0,0,0,.5); }
+  .aname { display: flex; justify-content: space-between; gap: 4px; }
+  .male { color: #32cbff; } .female { color: #fc5454; }
+  .hp { height: calc(4 * var(--u) * var(--scale)); background: #111827; margin-top: calc(2 * var(--u) * var(--scale)); }
+  .hp > b { display: block; height: 100%; }
+  .meta { display: flex; justify-content: space-between; color: var(--p-sub); font-size: .92em; margin-top: calc(1 * var(--u) * var(--scale)); }
+  .compact .meta { display: none; }
+  .st { color: #facc15; }
+  .unk-note { color: var(--p-sub); font-size: .85em; }
+
+  /* ---- trainer intro (VS) screen ---- */
+  .vs { position: absolute; inset: 0; overflow: hidden; --u: .234cqw; --scale: 1;
+    background: linear-gradient(#b9dcf0 0 54%, #7fb556 54% 100%); }
+  .vs::before { content: ""; position: absolute; inset: 0; background: linear-gradient(rgba(10,20,30,.08), rgba(10,20,30,.36)); }
+  .vs .band { position: absolute; top: 50%; height: 20%; width: 54%; }
+  .vs .band.l { left: 0; background: linear-gradient(90deg, var(--a1), var(--a1-dark)); clip-path: polygon(0 0, 100% 0, 96% 100%, 0 100%); }
+  .vs .band.r { right: 0; background: linear-gradient(270deg, var(--a2), var(--a2-dark)); clip-path: polygon(4% 0, 100% 0, 100% 100%, 0 100%); }
+  .vs .band::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 12%; background: rgba(255,255,255,.35); }
+  .vs .vs-badge { position: absolute; left: 50%; top: 54%; transform: translate(-50%, -50%); z-index: 5; width: 7cqw; aspect-ratio: 1;
+    display: grid; place-items: center; border-radius: 50%; background: #14202b; color: #fff; border: .45cqw solid #fff;
+    font: 800 2.6cqw/1 system-ui, sans-serif; box-shadow: 0 .5cqw 0 rgba(0,0,0,.25); }
+  .platform { position: absolute; bottom: 17%; height: 8%; border-radius: 50%; z-index: 2;
+    background: radial-gradient(ellipse at 50% 40%, #e9e4d6 0 55%, #b9b29f 56% 100%); box-shadow: 0 .8cqw 0 #8f8979, 0 1.6cqw 1.6cqw rgba(0,0,0,.28); }
+  .sprite { position: absolute; z-index: 3; image-rendering: pixelated; filter: drop-shadow(0 1cqw 0 rgba(0,0,0,.18)); animation: idle 2.2s ease-in-out infinite; }
+  @keyframes idle { 50% { transform: translateY(-.8cqw); } }
+  .sprite.flip { transform: scaleX(-1); animation-name: idleflip; } @keyframes idleflip { 0%,100% { transform: scaleX(-1); } 50% { transform: scaleX(-1) translateY(-.8cqw); } }
+  /* Minecraft advancement-style trainer toast */
+  .toast { position: absolute; top: 3.5%; z-index: 6; width: 39cqw; height: 9.5cqw; display: flex; align-items: center; gap: 1.6cqw; padding: 0 2cqw 0 1.5cqw;
+    background: #2e2e33; border: .35cqw solid #0d0d10; box-shadow: inset 0 0 0 .35cqw #55555e, 0 .6cqw 0 rgba(0,0,0,.3); }
+  .toast.l { left: 3%; } .toast.r { right: 3%; flex-direction: row-reverse; text-align: right; padding: 0 1.5cqw 0 2cqw; }
+  .toast .frame { flex: none; width: 6.4cqw; height: 6.4cqw; display: grid; place-items: center; background: #6b6b73; border: .3cqw solid #1a1a1e;
+    box-shadow: inset .3cqw .3cqw 0 #a0a0a8, inset -.3cqw -.3cqw 0 #3b3b42; position: relative; }
+  .toast .frame::before { content: ""; position: absolute; inset: -.9cqw; border: .35cqw solid var(--ac); opacity: .9; clip-path: polygon(0 0, 30% 0, 30% .35cqw, .35cqw .35cqw, .35cqw 30%, 0 30%, 0 0, 100% 0, 100% 30%, calc(100% - .35cqw) 30%, calc(100% - .35cqw) .35cqw, 70% .35cqw, 70% 0); }
+  .toast .face { width: 4.8cqw; height: 4.8cqw; }
+  .toast .tt { display: block; font: 700 1.5cqw/1.2 "Courier New", monospace; color: var(--ac); text-shadow: .15cqw .15cqw 0 #000; }
+  .toast .tn { display: block; font: 700 2.3cqw/1.2 "Courier New", monospace; color: #fff; text-shadow: .2cqw .2cqw 0 #000; }
+  .toast .tp { display: block; font: 700 1.3cqw/1.2 "Courier New", monospace; color: #c8c8d0; }
+  .party { position: absolute; top: 23%; z-index: 6; display: flex; gap: .7cqw; }
+  .party.l { left: 3%; } .party.r { right: 3%; flex-direction: row-reverse; }
+  .slot { position: relative; width: 6.2cqw; height: 7cqw; background: rgba(18,30,42,.82); border: .3cqw solid var(--bd); display: grid; place-items: center; overflow: hidden; }
+  .slot img { width: 5.2cqw; height: 5.2cqw; image-rendering: pixelated; margin-top: -.5cqw; }
+  .slot .lv { position: absolute; left: .35cqw; bottom: .75cqw; font: 700 .95cqw/1 "Courier New", monospace; color: #fff; text-shadow: 0 .1cqw 0 #000; }
+  .slot .mini { position: absolute; left: 0; right: 0; bottom: 0; height: .5cqw; background: #111827; }
+  .slot .mini b { display: block; height: 100%; }
+  .slot.fainted img { filter: grayscale(1) brightness(.55); }
+  .slot.fainted::after { content: "FNT"; position: absolute; right: .3cqw; top: .2cqw; font: 800 .9cqw system-ui; color: #ff8a8a; }
+  .slot.status::after { content: attr(data-st); position: absolute; right: .3cqw; top: .2cqw; font: 800 .9cqw system-ui; color: #facc15; }
+  .slot.unknown { background: rgba(18,30,42,.5); }
+  .slot.unknown span { font: 800 2.6cqw system-ui; color: #5d6b80; }
+  .slot.empty { opacity: .3; }
+  .vs .balls { position: absolute; top: 23%; z-index: 6; gap: .6cqw; margin: 0; }
+  .vs .balls.l { left: 3%; } .vs .balls.r { right: 3%; flex-direction: row-reverse; }
+  .vs .ball { width: 3cqw; height: 3cqw; border-width: .25cqw; }
+  .vs .balls.pips .ball { width: 3cqw; height: 1cqw; border: 0; margin-top: 1cqw; }
+  .info { position: absolute; bottom: 3.5%; z-index: 6; width: 34cqw; padding: .9cqw 1.6cqw 1.1cqw; color: #fff; background: rgba(18,30,42,.9);
+    border: .3cqw solid var(--bd); border-bottom: .8cqw solid var(--ac); font-family: "Courier New", monospace; font-weight: 700; }
+  .info.l { left: 3%; } .info.r { right: 3%; }
+  .info .n { display: flex; justify-content: space-between; font-size: 2cqw; line-height: 1.2; }
+  .info .hp { height: 1cqw; background: #111827; margin: .6cqw 0 .4cqw; } .info .hp b { display: block; height: 100%; }
+  .info .m { display: flex; justify-content: space-between; font-size: 1.4cqw; color: #b8d0dc; } .info .m .st { color: #facc15; }
+  /* ---- 3D player model (CSS cuboids) ---- */
+  .figure { position: relative; width: calc(8 * var(--px)); height: calc(32 * var(--px)); transform-style: preserve-3d; flex: none; }
+  .figure.l { transform: rotateY(28deg) rotateX(-4deg); } .figure.r { transform: rotateY(-28deg) rotateX(-4deg); }
+  .cuboid { position: absolute; transform-style: preserve-3d; }
+  .cuboid > i { position: absolute; display: block; backface-visibility: hidden; left: 0; top: 0; }
+
+  /* ---- in-battle team cards (reference: Cobblemon server HUD) ---- */
+  .hudroot { position: absolute; inset: 0; --u: .234cqw; --px: .33cqw; font-family: "Courier New", ui-monospace, monospace; font-weight: 700; }
+  .card { position: absolute; width: calc(150 * var(--u) * var(--scale)); opacity: var(--opacity); }
+  .tile { display: flex; align-items: stretch; gap: calc(4 * var(--u) * var(--scale)); padding: calc(3 * var(--u) * var(--scale));
+    background: var(--p-bg); border: calc(1.5 * var(--u) * var(--scale)) solid var(--p-edge); border-radius: calc(4 * var(--u) * var(--scale)); color: var(--p-text); }
+  .tile + .tile { margin-top: calc(2 * var(--u) * var(--scale)); }
+  .card.r .tile { flex-direction: row-reverse; }
+  .tframe { flex: none; width: calc(30 * var(--u) * var(--scale)); height: calc(30 * var(--u) * var(--scale)); background: rgba(0,0,0,.35);
+    border: calc(2 * var(--u) * var(--scale)) solid var(--accent-c); display: grid; place-items: center; overflow: hidden; }
+  .tframe img { width: 100%; image-rendering: pixelated; }
+  .tinfo { flex: 1; min-width: 0; font-size: calc(9 * var(--u) * var(--scale)); line-height: 1.2; display: flex; flex-direction: column; justify-content: center; }
+  .trow { display: flex; justify-content: space-between; gap: calc(3 * var(--u) * var(--scale)); }
+  .thp { position: relative; height: calc(9 * var(--u) * var(--scale)); margin-top: calc(2 * var(--u) * var(--scale)); background: #14181f; border: calc(1 * var(--u) * var(--scale)) solid #000; }
+  .thp b { position: absolute; inset: 0 auto 0 0; }
+  .thp span { position: absolute; inset: 0; display: grid; place-items: center; font-size: calc(7 * var(--u) * var(--scale)); color: #fff; text-shadow: 0 1px 0 #000; }
+  .tstat { color: #facc15; }
+  .group { position: relative; height: calc(84 * var(--u) * var(--scale)); display: flex; align-items: flex-end; justify-content: flex-start; gap: calc(2 * var(--u) * var(--scale));
+    margin-top: calc(4 * var(--u) * var(--scale)); --px: calc(2.1 * var(--u) * var(--scale)); perspective: 60cqw; }
+  .card.r .group { flex-direction: row-reverse; }
+  .group .figure { margin: 0 calc(10 * var(--u) * var(--scale)) 0 calc(6 * var(--u) * var(--scale)); animation: none; }
+  .card.r .group .figure { margin: 0 calc(6 * var(--u) * var(--scale)) 0 calc(10 * var(--u) * var(--scale)); }
+  .group .mon-sprite { width: calc(48 * var(--u) * var(--scale)); height: calc(48 * var(--u) * var(--scale)); image-rendering: pixelated; margin-left: calc(-8 * var(--u) * var(--scale));
+    filter: drop-shadow(0 calc(2 * var(--u)) 0 rgba(0,0,0,.25)); }
+  .card.r .group .mon-sprite { margin-left: 0; margin-right: calc(-8 * var(--u) * var(--scale)); transform: scaleX(-1); }
+  .group .mon-sprite.sm { width: calc(30 * var(--u) * var(--scale)); height: calc(30 * var(--u) * var(--scale)); }
+  .pbar { display: flex; gap: calc(1 * var(--u) * var(--scale)); padding: calc(1 * var(--u) * var(--scale)); background: rgba(0,0,0,.6); border: calc(1 * var(--u) * var(--scale)) solid #000; margin-top: calc(2 * var(--u) * var(--scale)); }
+  .card.r .pbar { flex-direction: row-reverse; }
+  .pbar i { flex: 1; height: calc(4 * var(--u) * var(--scale)); background: #2a2f3a; } .pbar i.healthy { background: var(--accent-c); } .pbar i.status { background: #facc15; } .pbar i.fainted { background: #7f1d1d; }
+  .tlabel { margin-top: calc(3 * var(--u) * var(--scale)); font-size: calc(13 * var(--u) * var(--scale)); color: #fff; text-shadow: calc(1 * var(--u) * var(--scale)) calc(1 * var(--u) * var(--scale)) 0 #000; }
+  .card.r .tlabel { text-align: right; }
+  .card .balls { margin-top: calc(2 * var(--u) * var(--scale)); } .card.r .balls { flex-direction: row-reverse; }
+  .card .ball { width: calc(9 * var(--u) * var(--scale)); height: calc(9 * var(--u) * var(--scale)); }
+  .cards-row { display: flex; gap: calc(2 * var(--u) * var(--scale)); margin-top: calc(2 * var(--u) * var(--scale)); } .card.r .cards-row { flex-direction: row-reverse; }
+  .cards-row img { width: calc(20 * var(--u) * var(--scale)); height: calc(20 * var(--u) * var(--scale)); image-rendering: pixelated; background: rgba(0,0,0,.4); border: 1px solid var(--p-edge); }
+  .cards-row img.fainted { filter: grayscale(1) brightness(.5); } .cards-row img.unknown { opacity: .25; }
+  .modes { display: flex; gap: 6px; margin-bottom: 6px; }
+  .modes button { flex: 1; padding: 6px; background: #12141a; color: var(--text); border: 1px solid var(--edge); border-radius: 6px; cursor: pointer; font: inherit; }
+  .modes button.on { background: var(--accent); color: #06222c; font-weight: 700; border-color: var(--accent); }
+
+  /* ---- controls ---- */
+  aside { background: var(--panel); border: 1px solid var(--edge); border-radius: 8px; padding: 14px; position: sticky; top: 12px; }
+  aside h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 14px 0 6px; }
+  aside h2:first-child { margin-top: 0; }
+  label { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 6px 0; }
+  select, input[type=range] { width: 150px; }
+  select { background: #12141a; color: var(--text); border: 1px solid var(--edge); border-radius: 6px; padding: 4px; }
+  input[type=color] { width: 40px; height: 24px; padding: 0; border: 1px solid var(--edge); background: none; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+  .row label { justify-content: flex-start; font-size: 13px; }
+  pre { background: #0e1015; border: 1px solid var(--edge); border-radius: 6px; padding: 8px; font-size: 11px; max-height: 190px; overflow: auto; margin: 8px 0 0; color: #b7f0d0; }
+  .note { margin: 0 20px 24px; color: var(--muted); font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Cobblemon - Battleplacks <span style="color:var(--muted);font-weight:400">· render preview</span></h1>
+  <p>A browser mock of what the plaque HUD draws. Controls mirror the fields in <code>battleplacks.json</code>. Pokémon art is original placeholder pixel art; the mod uses Cobblemon's own models.</p>
+</header>
+<main>
+  <div class="stage" id="stage" aria-label="Battle scene preview">
+    <div class="hills"></div>
+    <div id="scene"></div>
+    <div class="hotbar"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  </div>
+
+  <aside>
+    <h2>Screen</h2>
+    <div class="modes"><button id="m-hud" class="on" type="button">In-battle cards</button><button id="m-intro" type="button">VS intro</button></div>
+    <h2>Battle</h2>
+    <label>Scenario
+      <select id="scenario">
+        <option value="pvp-singles">PvP · singles</option>
+        <option value="pvp-doubles">PvP · doubles</option>
+        <option value="rct-singles">Single player · RCT trainer</option>
+        <option value="rct-doubles">Single player · RCT trainer (doubles)</option>
+      </select>
+    </label>
+    <h2>Look</h2>
+    <label>Theme
+      <select id="theme">
+        <option value="COBBLEMON">Cobblemon</option><option value="CLASSIC">Classic</option>
+        <option value="MINIMAL">Minimal</option><option value="MIDNIGHT">Midnight</option>
+      </select>
+    </label>
+    <label>Party style
+      <select id="ballStyle"><option value="PIPS">Bar</option><option value="BALLS">Balls</option><option value="ICONS">Sprites</option></select>
+    </label>
+    <label>Your corner
+      <select id="ownAnchor"><option>TOP_LEFT</option><option>BOTTOM_LEFT</option><option>TOP_RIGHT</option><option>BOTTOM_RIGHT</option></select>
+    </label>
+    <label>Opponent corner
+      <select id="opponentAnchor"><option>TOP_RIGHT</option><option>TOP_LEFT</option><option>BOTTOM_LEFT</option><option>BOTTOM_RIGHT</option></select>
+    </label>
+    <label>Scale <input type="range" id="scale" min="0.6" max="1.6" step="0.1" value="1"></label>
+    <label>Opacity <input type="range" id="opacity" min="30" max="100" step="2" value="92"></label>
+    <label>Your accent <input type="color" id="accentOwn" value="#32cbff"></label>
+    <label>Opponent accent <input type="color" id="accentOpponent" value="#fc5454"></label>
+    <h2>Show</h2>
+    <div class="row">
+      <label><input type="checkbox" id="showHead" checked> Head</label>
+      <label><input type="checkbox" id="showTrainerName" checked> Name</label>
+      <label><input type="checkbox" id="showParty" checked> Party</label>
+      <label><input type="checkbox" id="showLevel" checked> Level</label>
+      <label><input type="checkbox" id="showHpText" checked> HP text</label>
+      <label><input type="checkbox" id="showStatus" checked> Status</label>
+      <label><input type="checkbox" id="showUnknownSlots" checked> Unknown</label>
+      <label><input type="checkbox" id="compact"> Compact</label>
+    </div>
+    <h2>Config JSON</h2>
+    <pre id="json"></pre>
+  </aside>
+</main>
+<p class="note">RCT trainers are shown like any NPC opponent. Fair play: your own party is shown in full. For an opponent only revealed Pokémon appear, the rest are unknown (grey) slots. Opponent HP shows as a percentage, like Cobblemon does.</p>
+
+<script>
+const themes = {
+  COBBLEMON: { bg: "rgba(47,63,79,A)", edge: "#8fd4e8", text: "#fff", sub: "#b8d0dc", own: "#32cbff", opp: "#fc5454" },
+  CLASSIC:   { bg: "rgba(248,240,216,A)", edge: "#505050", text: "#303030", sub: "#606060", own: "#58a8f8", opp: "#f85858" },
+  MINIMAL:   { bg: "rgba(0,0,0,A)", edge: "transparent", text: "#fff", sub: "#b0b0b0", own: "#6ee7b7", opp: "#fca5a5" },
+  MIDNIGHT:  { bg: "rgba(20,22,43,A)", edge: "#3b4080", text: "#e8e8ff", sub: "#9090c0", own: "#7aa2ff", opp: "#ff7a9a" },
+};
+const mon = (n, sp, lv, g, hp, st, col) => ({ n, sp, lv, g, hp, st, col });
+const scenarios = {
+  "pvp-singles": [
+    { own: true, kind: "PLAYER", name: "Robin", skin: "#e0ac8a", hair: "#3b2a1c",
+      party: ["healthy","status","healthy","fainted","healthy","healthy"],
+      active: [mon("Charizard","Ch",52,"M",.78,null,"#f08030")] },
+    { own: false, kind: "PLAYER", name: "Alex", skin: "#c68642", hair: "#a0522d",
+      party: ["healthy","healthy","fainted","unknown","unknown","unknown"],
+      active: [mon("Blastoise","Bl",50,"M",.41,"par","#6890f0")] },
+  ],
+  "pvp-doubles": [
+    { own: true, kind: "PLAYER", name: "Robin", skin: "#e0ac8a", hair: "#3b2a1c",
+      party: ["healthy","healthy","status","healthy","fainted","healthy"],
+      active: [mon("Garchomp","Ga",58,"F",.92,null,"#7038f8"), mon("Togekiss","To",55,"F",.33,null,"#f0b6d0")] },
+    { own: false, kind: "PLAYER", name: "Alex", skin: "#c68642", hair: "#a0522d",
+      party: ["healthy","healthy","unknown","unknown","unknown","unknown"],
+      active: [mon("Gengar","Ge",56,"M",.64,"psn","#705898"), mon("Rillaboom","Ri",54,"M",.1,null,"#78c850")] },
+  ],
+  "rct-singles": [
+    { own: true, kind: "PLAYER", name: "Robin", skin: "#e0ac8a", hair: "#3b2a1c",
+      party: ["healthy","healthy","healthy","status","healthy","healthy"],
+      active: [mon("Charizard","Ch",52,"M",.78,null,"#f08030")] },
+    { own: false, kind: "NPC", name: "Gym Leader Brock", series: "Pewter Gym", skin: "#b88a5a", hair: "#222",
+      party: ["healthy","unknown","unknown","unknown","unknown","unknown"],
+      active: [mon("Rillaboom","Ri",50,"M",.7,null,"#78c850")] },
+  ],
+  "rct-doubles": [
+    { own: true, kind: "PLAYER", name: "Robin", skin: "#e0ac8a", hair: "#3b2a1c",
+      party: ["healthy","healthy","status","healthy","healthy","fainted"],
+      active: [mon("Garchomp","Ga",58,"F",.92,null,"#7038f8"), mon("Togekiss","To",55,"F",.55,null,"#f0b6d0")] },
+    { own: false, kind: "NPC", name: "Elite Four Lorelei", series: "Elite Four", skin: "#d8b8e8", hair: "#7a2a5a",
+      party: ["healthy","healthy","unknown","unknown","unknown","unknown"],
+      active: [mon("Blastoise","Bl",60,"M",.88,null,"#6890f0"), mon("Gengar","Ge",58,"M",.35,"psn","#705898")] },
+  ],
+};
+const pool = [["Ch","#f08030",52,.78],["Bl","#6890f0",50,.41],["Ga","#7038f8",58,.92],["To","#f0b6d0",55,.33],["Ge","#705898",56,.64],["Ri","#78c850",54,.6]];
+Object.values(scenarios).forEach(list => list.forEach((m, mi) => {
+  m.roster = m.party.map((_, i) => { const p = pool[(i + mi * 2) % pool.length]; return { sp: p[0], col: p[1], lv: p[2] - mi * 2, hp: p[3], st: "psn" }; });
+  m.own = !!m.own;
+}));
+const sceneMons = {
+  "pvp-singles": [[22,62,18,"#f08030","Ch"],[64,20,16,"#6890f0","Bl"]],
+  "pvp-doubles": [[14,64,14,"#7038f8","Ga"],[30,58,12,"#f0b6d0","To"],[56,22,12,"#705898","Ge"],[72,26,12,"#78c850","Ri"]],
+  "rct-singles": [[22,62,18,"#f08030","Ch"],[64,20,16,"#78c850","Ri"]],
+  "rct-doubles": [[14,64,14,"#7038f8","Ga"],[30,58,12,"#f0b6d0","To"],[56,22,12,"#6890f0","Bl"],[72,26,12,"#705898","Ge"]],
+};
+const $ = id => document.getElementById(id);
+const ids = ["scenario","theme","ballStyle","ownAnchor","opponentAnchor","scale","opacity","accentOwn","accentOpponent",
+  "showHead","showTrainerName","showParty","showLevel","showHpText","showStatus","showUnknownSlots","compact"];
+let accentTouched = { accentOwn: false, accentOpponent: false };
+["accentOwn","accentOpponent"].forEach(k => $(k).addEventListener("input", () => accentTouched[k] = true));
+
+const cfg = () => Object.fromEntries(ids.map(id => {
+  const e = $(id); return [id, e.type === "checkbox" ? e.checked : e.type === "range" ? +e.value : e.value];
+}));
+
+function hpColor(f) { return f > .5 ? "#4ade80" : f > .2 ? "#facc15" : "#ef4444"; }
+
+function plaque(m, c, th) {
+  const own = m.own, anchor = own ? c.ownAnchor : c.opponentAnchor;
+  const accent = own ? (accentTouched.accentOwn ? c.accentOwn : th.own) : (accentTouched.accentOpponent ? c.accentOpponent : th.opp);
+  const el = document.createElement("div");
+  el.className = "plaque" + (c.compact ? " compact" : "") + (c.ballStyle === "PIPS" ? " pips" : "");
+  const s = el.style;
+  s.setProperty("--scale", c.scale);
+  s.setProperty("--opacity", c.opacity / 100);
+  s.setProperty("--p-bg", th.bg.replace("A", (c.opacity / 100).toFixed(2)));
+  s.setProperty("--p-edge", th.edge); s.setProperty("--p-text", th.text); s.setProperty("--p-sub", th.sub);
+  s.setProperty("--accent-c", accent);
+  s.setProperty("--skin", m.skin || "#55607a"); s.setProperty("--hair", m.hair || "#333");
+  s.opacity = 1;
+  const marginPct = "calc(8 * var(--u))";
+  if (anchor.endsWith("LEFT")) s.left = marginPct; else s.right = marginPct;
+  el.dataset.anchor = anchor;
+  el.dataset.top = anchor.startsWith("TOP") ? "1" : "0";
+
+  let html = "";
+  if (m.kind !== "WILD" && (c.showHead || c.showTrainerName || c.showParty)) {
+    html += `<div class="trainer">${c.showHead ? '<span class="face"></span>' : ""}<div>`;
+    if (c.showTrainerName) html += `<span class="tname">${m.name}</span>`;
+    if (c.showParty) {
+      const balls = m.party.filter(p => !(p === "unknown" && !c.showUnknownSlots && !own))
+        .map(p => `<span class="ball ${p}"></span>`).join("");
+      html += `<div class="balls">${balls}</div>`;
+    }
+    html += `</div></div>`;
+  }
+  for (const a of m.active) {
+    const flat = own;
+    const hpTxt = flat ? `${Math.round(a.hp * (50 + a.lv * 2))}/${50 + a.lv * 2}`.replace(/^(\d+)\//, (_, h) => h + "/") : `${Math.ceil(a.hp * 100)}%`;
+    const g = a.g === "M" ? '<span class="male">♂</span>' : a.g === "F" ? '<span class="female">♀</span>' : "";
+    html += `<div class="active"><div class="portrait" style="background:rgba(0,0,0,.25)"><img src="${sprite(a.sp, a.col)}" style="width:100%;image-rendering:pixelated" alt=""></div><div>
+      <div class="aname"><span>${a.n}${c.showLevel ? " Lv" + a.lv : ""}</span>${g}</div>
+      <div class="hp"><b style="width:${a.hp * 100}%;background:${hpColor(a.hp)}"></b></div>
+      <div class="meta"><span>${c.showHpText ? hpTxt : ""}</span><span class="st">${c.showStatus && a.st ? a.st.toUpperCase() : ""}</span></div>
+    </div></div>`;
+  }
+  el.innerHTML = html;
+  return el;
+}
+
+/* ---------- pixel sprites (original placeholder art, drawn procedurally; the mod uses Cobblemon's real models) ---------- */
+const SPR = {};
+function sprite(key, col) {
+  if (SPR[key]) return SPR[key];
+  const cv = document.createElement("canvas"); cv.width = cv.height = 32; const g = cv.getContext("2d");
+  const r = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
+  const dk = "#1c1a24", eye = () => { r(14,9,2,2,dk); };
+  const draw = {
+    Ch() { r(7,17,3,3,"#d96a1f"); r(10,20,3,5,"#e8802a"); r(17,20,3,5,"#e8802a"); r(8,12,12,9,"#f08a30"); r(11,15,6,6,"#f8d890"); r(8,5,11,9,"#f08a30"); r(18,8,4,5,"#f08a30");
+      r(5,14,4,3,"#f08a30"); r(19,14,4,3,"#f08a30"); r(20,19,5,2,"#f08a30"); r(24,15,3,5,"#e23b2b"); r(25,16,1,3,"#ffd23a"); r(13,8,2,2,"#fff"); r(14,9,1,2,dk); r(21,10,1,1,dk); },
+    Bl() { r(6,13,5,8,"#5a86d6"); r(9,12,14,10,"#8a5a2b"); r(11,9,10,4,"#a46a33"); r(11,15,10,6,"#e8d29a"); r(20,7,7,8,"#5a86d6"); r(10,6,3,6,"#9aa0aa"); r(15,5,3,7,"#9aa0aa");
+      r(9,22,5,4,"#5a86d6"); r(19,22,5,4,"#5a86d6"); r(23,9,2,2,"#fff"); r(24,10,1,2,dk); r(26,13,1,1,dk); },
+    Ga() { r(5,6,4,9,"#4b52b8"); r(8,10,12,12,"#5560c8"); r(11,15,7,7,"#d8d0e8"); r(17,6,8,7,"#5560c8"); r(22,9,5,3,"#5560c8"); r(7,16,4,3,"#5560c8"); r(8,22,4,4,"#4b52b8"); r(16,22,4,4,"#4b52b8");
+      r(20,8,2,2,"#ffe14a"); r(21,9,1,1,dk); r(4,14,3,6,"#4b52b8"); },
+    To() { r(10,12,11,10,"#f6f2ee"); r(11,5,9,8,"#f6f2ee"); r(4,11,6,9,"#f6f2ee"); r(21,11,6,9,"#f6f2ee"); r(4,17,6,3,"#7ab8ee"); r(21,17,6,3,"#7ab8ee"); r(14,2,3,4,"#e84a4a"); r(16,2,2,3,"#4a7ae8");
+      r(11,9,3,3,"#ee9a9a"); r(18,9,3,3,"#ee9a9a"); r(13,8,2,2,"#fff"); r(14,8,1,2,dk); r(17,8,2,2,"#fff"); r(18,8,1,2,dk); r(12,22,3,3,"#e8a85a"); r(17,22,3,3,"#e8a85a"); r(15,10,2,2,"#f0c050"); },
+    Ge() { r(7,8,17,13,"#6a4fa0"); r(9,5,3,4,"#6a4fa0"); r(14,3,3,6,"#6a4fa0"); r(19,5,3,4,"#6a4fa0"); r(4,14,4,3,"#6a4fa0"); r(23,14,4,3,"#6a4fa0"); r(9,21,5,4,"#58408a"); r(18,21,5,4,"#58408a");
+      r(10,12,4,3,"#ff4d5a"); r(18,12,4,3,"#ff4d5a"); r(11,13,1,1,"#fff"); r(19,13,1,1,"#fff"); r(10,17,12,2,"#fff"); r(10,17,12,1,dk); },
+    Ri() { r(7,13,14,10,"#66b04a"); r(10,16,8,6,"#d8c28a"); r(9,6,11,8,"#66b04a"); r(9,4,11,3,"#8a5a2b"); r(4,14,5,9,"#66b04a"); r(20,14,5,9,"#66b04a"); r(8,23,5,3,"#8a5a2b"); r(16,23,5,3,"#8a5a2b");
+      r(12,9,2,2,"#fff"); r(13,9,1,2,dk); r(17,9,2,2,"#fff"); r(18,9,1,2,dk); r(14,12,4,1,dk); r(24,8,2,10,"#a47a3a"); r(23,6,4,3,"#c89a4a"); },
+    Pi() { r(9,12,12,10,"#f6d338"); r(10,5,10,8,"#f6d338"); r(8,1,3,7,"#f6d338"); r(8,1,3,2,dk); r(19,1,3,7,"#f6d338"); r(19,1,3,2,dk); r(10,10,3,3,"#e84a4a"); r(18,10,3,3,"#e84a4a");
+      r(12,8,2,2,dk); r(17,8,2,2,dk); r(22,14,6,2,"#e8b82a"); r(25,10,3,6,"#f6d338"); r(10,22,4,3,"#e8b82a"); r(17,22,4,3,"#e8b82a"); },
+    Ev() { r(8,13,13,9,"#c89a64"); r(9,6,11,8,"#c89a64"); r(8,2,3,6,"#a87a44"); r(18,2,3,6,"#a87a44"); r(10,15,9,6,"#f2dcae"); r(21,16,6,5,"#f2dcae"); r(12,9,2,2,dk); r(17,9,2,2,dk); r(9,22,4,4,"#a87a44"); r(17,22,4,4,"#a87a44"); },
+    Ra() { r(8,13,13,9,"#9a78d0"); r(18,8,8,7,"#9a78d0"); r(18,4,3,5,"#9a78d0"); r(10,15,8,6,"#f2e8d8"); r(6,18,3,3,"#9a78d0"); r(2,20,5,2,"#c8a0c8"); r(22,10,2,2,dk); r(25,12,1,1,dk); r(24,14,3,2,"#fff"); r(10,22,4,3,"#7a58b0"); r(16,22,4,3,"#7a58b0"); },
+  };
+  (draw[key] || (() => { r(8,8,16,16,col || "#888"); r(12,12,3,3,"#fff"); r(18,12,3,3,"#fff"); }))();
+  // automatic dark outline around every drawn pixel
+  const d = g.getImageData(0, 0, 32, 32), o = g.createImageData(32, 32);
+  const at = (x, y) => x < 0 || y < 0 || x > 31 || y > 31 ? 0 : d.data[(y * 32 + x) * 4 + 3];
+  for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) { const i = (y * 32 + x) * 4;
+    if (at(x, y)) { o.data.set(d.data.slice(i, i + 4), i); }
+    else if (at(x-1,y) || at(x+1,y) || at(x,y-1) || at(x,y+1)) { o.data[i] = 28; o.data[i+1] = 26; o.data[i+2] = 36; o.data[i+3] = 255; } }
+  g.putImageData(o, 0, 0);
+  return (SPR[key] = cv.toDataURL());
+}
+const hpTxt = (m, a) => m.own ? `${Math.round(a.hp * (50 + a.lv * 2))}/${50 + a.lv * 2}` : `${Math.ceil(a.hp * 100)}%`;
+
+/* ---------- trainer intro (VS) screen ---------- */
+let mode = "hud";
+const shade = (hex, f) => "#" + [1,3,5].map(i => Math.max(0, Math.min(255, Math.round(parseInt(hex.substr(i,2),16) * f))).toString(16).padStart(2,"0")).join("");
+
+function partySlots(m, c, cls) {
+  const wrap = document.createElement("div"); wrap.className = "party " + cls;
+  for (let i = 0; i < 6; i++) {
+    const st = m.party[i] || "empty", a = m.roster && m.roster[i];
+    const hidden = st === "unknown" && !c.showUnknownSlots && !m.own;
+    const s = document.createElement("div");
+    s.className = "slot " + (hidden ? "empty" : st);
+    if (st === "status" && a) s.dataset.st = (a.st || "psn").toUpperCase();
+    if (a && st !== "unknown" && st !== "empty") {
+      s.innerHTML = `<img src="${sprite(a.sp, a.col)}" alt="">` + (c.showLevel ? `<span class="lv">Lv${a.lv}</span>` : "")
+        + `<div class="mini"><b style="width:${st === "fainted" ? 0 : a.hp * 100}%;background:${hpColor(a.hp)}"></b></div>`;
+    } else s.innerHTML = `<span>?</span>`;
+    wrap.appendChild(s);
+  }
+  return wrap;
+}
+
+function intro(c) {
+  const scene = $("scene"), th = themes[c.theme];
+  const accOwn = accentTouched.accentOwn ? c.accentOwn : th.own, accOpp = accentTouched.accentOpponent ? c.accentOpponent : th.opp;
+  const [me, foe] = scenarios[c.scenario];
+  const root = document.createElement("div"); root.className = "vs";
+  root.style.setProperty("--a1", shade(accOwn, .75)); root.style.setProperty("--a1-dark", shade(accOwn, .32));
+  root.style.setProperty("--a2", shade(accOpp, .75)); root.style.setProperty("--a2-dark", shade(accOpp, .32));
+  root.style.setProperty("--bd", th.edge === "transparent" ? "#ffffff55" : th.edge);
+  root.innerHTML = `<div class="band l"></div><div class="band r"></div><div class="vs-badge">VS</div>`;
+
+  const place = (m, side) => {
+    const ac = side === "l" ? accOwn : accOpp, cards = c.ballStyle === "ICONS";
+    // big active Pokémon on platforms
+    const n = m.active.length;
+    m.active.forEach((a, i) => {
+      const w = n > 1 ? 24 : 30, x = side === "l" ? (n > 1 ? 3 + i * 21 : 10) : (n > 1 ? 52 + i * 21 : 60);
+      const pf = document.createElement("div"); pf.className = "platform"; Object.assign(pf.style, { width: w * 1.05 + "cqw", left: (x - w * .025) + "cqw" }); root.appendChild(pf);
+      const im = document.createElement("img"); im.className = "sprite" + (side === "r" ? " flip" : ""); im.src = sprite(a.sp, a.col);
+      Object.assign(im.style, { width: w + "cqw", height: w + "cqw", left: x + "cqw", bottom: (n > 1 && i ? 21 : 19) + "%" });
+      root.appendChild(im);
+    });
+    // advancement-style trainer toast
+    if (m.kind !== "WILD" && (c.showTrainerName || c.showHead)) {
+      const t = document.createElement("div"); t.className = "toast " + side; t.style.setProperty("--ac", ac);
+      const face = `<span class="face" style="--skin:${m.skin};--hair:${m.hair}"></span>`;
+      t.innerHTML = (c.showHead ? `<span class="frame">${face}</span>` : "") + `<div><span class="tt">${m.kind === "NPC" ? (m.series || "Trainer Battle!") : side === "l" ? "Challenge Accepted!" : "Challenger"}</span>`
+        + (c.showTrainerName ? `<span class="tn">${m.name}</span>` : "") + `<span class="tp">${m.party.filter(p => p !== "unknown" && p !== "empty").length} Pokémon${m.own ? "" : " revealed"}</span></div>`;
+      root.appendChild(t);
+    } else if (m.kind === "WILD") {
+      const t = document.createElement("div"); t.className = "toast " + side; t.style.setProperty("--ac", ac);
+      t.innerHTML = `<span class="frame"><img src="${sprite(m.active[0].sp)}" style="width:5.2cqw;image-rendering:pixelated"></span><div><span class="tt">A wild Pokémon appeared!</span><span class="tn">${m.active[0].n}</span></div>`;
+      root.appendChild(t);
+    }
+    if (c.showParty && m.kind !== "WILD") {
+      if (cards) root.appendChild(partySlots(m, c, side));
+      else {
+        const b = document.createElement("div"); b.className = "balls " + side + (c.ballStyle === "PIPS" ? " pips" : ""); b.style.display = "flex";
+        b.innerHTML = m.party.filter(p => !(p === "unknown" && !c.showUnknownSlots && !m.own)).map(p => `<span class="ball ${p}"></span>`).join("");
+        root.appendChild(b);
+      }
+    }
+    // Pokémon info bar
+    const a = m.active[0];
+    if (a) {
+      const i = document.createElement("div"); i.className = "info " + side; i.style.setProperty("--ac", ac);
+      const g = a.g === "M" ? '<span class="male">♂</span>' : a.g === "F" ? '<span class="female">♀</span>' : "";
+      i.innerHTML = `<div class="n"><span>${a.n}${c.showLevel ? " Lv" + a.lv : ""}</span>${g}</div><div class="hp"><b style="width:${a.hp * 100}%;background:${hpColor(a.hp)}"></b></div>`
+        + `<div class="m"><span>${c.showHpText ? hpTxt(m, a) : ""}</span><span class="st">${c.showStatus && a.st ? a.st.toUpperCase() : ""}</span></div>`;
+      root.appendChild(i);
+    }
+  };
+  place(me, "l"); place(foe, "r");
+  scene.appendChild(root);
+}
+
+// Faces of a cuboid (w,h,d in px units). Returns a positioned 3D box.
+function cuboid(w, h, d, x, y, z, c, extra = {}) {
+  const el = document.createElement("div"); el.className = "cuboid";
+  Object.assign(el.style, { width: `calc(${w} * var(--px))`, height: `calc(${h} * var(--px))`, left: `calc(${x} * var(--px))`, top: `calc(${y} * var(--px))`, transform: `translateZ(calc(${z} * var(--px)))` });
+  const add = (st, inner) => { const f = document.createElement("i"); Object.assign(f.style, st); if (inner) f.innerHTML = inner; el.appendChild(f); };
+  const W = `calc(${w} * var(--px))`, H = `calc(${h} * var(--px))`, D = `calc(${d} * var(--px))`;
+  add({ width: W, height: H, background: extra.front || c, transform: `translateZ(calc(${d / 2} * var(--px)))` }, extra.frontInner);
+  add({ width: W, height: H, background: shade(c, .7), transform: `rotateY(180deg) translateZ(calc(${d / 2} * var(--px)))` });
+  add({ width: D, height: H, left: `calc(${w / 2 - d / 2} * var(--px))`, background: shade(c, .85), transform: `rotateY(90deg) translateZ(calc(${w / 2} * var(--px)))` });
+  add({ width: D, height: H, left: `calc(${w / 2 - d / 2} * var(--px))`, background: shade(c, .8), transform: `rotateY(-90deg) translateZ(calc(${w / 2} * var(--px)))` });
+  add({ width: W, height: D, top: `calc(${h / 2 - d / 2} * var(--px))`, background: extra.top || shade(c, 1.1), transform: `rotateX(90deg) translateZ(calc(${h / 2} * var(--px)))` });
+  add({ width: W, height: D, top: `calc(${h / 2 - d / 2} * var(--px))`, background: shade(c, .6), transform: `rotateX(-90deg) translateZ(calc(${h / 2} * var(--px)))` });
+  return el;
+}
+function figure(side, skin, hair, shirt, pants) {
+  const f = document.createElement("div"); f.className = "figure " + side;
+  const eyes = '<div style="position:absolute;left:12.5%;top:50%;width:25%;height:12%;background:#fff"><div style="margin-left:50%;width:50%;height:100%;background:#4b3a9a"></div></div>'
+    + '<div style="position:absolute;right:12.5%;top:50%;width:25%;height:12%;background:#fff"><div style="width:50%;height:100%;background:#4b3a9a"></div></div>'
+    + '<div style="position:absolute;left:37.5%;top:70%;width:25%;height:10%;background:' + shade(skin, .7) + '"></div>'
+    + '<div style="position:absolute;left:0;right:0;top:0;height:25%;background:' + hair + '"></div>';
+  f.appendChild(cuboid(8, 8, 8, 0, 0, 0, skin, { frontInner: eyes, top: hair }));
+  f.appendChild(cuboid(8, 12, 4, 0, 8, 0, shirt));
+  f.appendChild(cuboid(4, 12, 4, -4, 8, 0, skin));
+  f.appendChild(cuboid(4, 12, 4, 8, 8, 0, skin));
+  f.appendChild(cuboid(4, 12, 4, 0, 20, 0, pants));
+  f.appendChild(cuboid(4, 12, 4, 4, 20, 0, shade(pants, .9)));
+  return f;
+}
+
+function hud(c) {
+  const scene = $("scene"), th = themes[c.theme];
+  const root = document.createElement("div"); root.className = "hudroot"; scene.appendChild(root);
+  const stack = {};
+  scenarios[c.scenario].forEach(m => {
+    const side = m.own ? "l" : "r", anchor = m.own ? c.ownAnchor : c.opponentAnchor;
+    const ac = m.own ? (accentTouched.accentOwn ? c.accentOwn : th.own) : (accentTouched.accentOpponent ? c.accentOpponent : th.opp);
+    const el = document.createElement("div"); el.className = "card " + (anchor.endsWith("LEFT") ? "l" : "r");
+    const st = el.style;
+    st.setProperty("--scale", c.scale); st.setProperty("--opacity", c.opacity / 100);
+    st.setProperty("--p-bg", th.bg.replace("A", "0.92")); st.setProperty("--p-edge", th.edge === "transparent" ? "#00000066" : th.edge);
+    st.setProperty("--p-text", th.text); st.setProperty("--accent-c", ac);
+    st[anchor.endsWith("LEFT") ? "left" : "right"] = "calc(8 * var(--u))";
+
+    let html = "";
+    // one Cobblemon-style tile per active Pokémon
+    for (const a of m.active) {
+      const g = a.g === "M" ? '<span class="male">♂</span>' : a.g === "F" ? '<span class="female">♀</span>' : "";
+      html += `<div class="tile"><div class="tframe"><img src="${sprite(a.sp, a.col)}" alt=""></div><div class="tinfo">
+        <div class="trow"><span>${a.n}</span><span>${g}${c.showLevel ? " Lv." + a.lv : ""}</span></div>
+        <div class="thp"><b style="width:${a.hp * 100}%;background:${hpColor(a.hp)}"></b><span>${c.showHpText ? hpTxt(m, a) : ""}</span></div>
+        ${c.showStatus && a.st ? `<div class="tstat">${a.st.toUpperCase()}</div>` : ""}</div></div>`;
+    }
+    // trainer model + their Pokémon, then party bar and team label
+    if (c.showHead) html += `<div class="group" data-side="${side}"></div>`;
+    if (c.showParty) {
+      const slots = m.party.map(p => p).filter(p => !(p === "unknown" && !c.showUnknownSlots && !m.own));
+      if (c.ballStyle === "BALLS") html += `<div class="balls">${slots.map(p => `<span class="ball ${p}"></span>`).join("")}</div>`;
+      else if (c.ballStyle === "ICONS") html += `<div class="cards-row">${slots.map((p, i) => { const r = m.roster[i];
+        return `<img class="${p}" src="${p === "unknown" ? sprite("?", "#445") : sprite(r.sp, r.col)}" alt="">`; }).join("")}</div>`;
+      else html += `<div class="pbar">${slots.map(p => `<i class="${p === "unknown" ? "" : p}"></i>`).join("")}</div>`;
+    }
+    if (c.showTrainerName) html += `<div class="tlabel">${m.kind === "NPC" ? m.name : "Team " + m.name}</div>`;
+    el.innerHTML = html;
+    root.appendChild(el);
+    // build the 3D group after insertion (needs DOM nodes)
+    const grp = el.querySelector(".group");
+    if (grp) {
+      const fs = anchor.endsWith("LEFT") ? "l" : "r";
+      grp.appendChild(figure(fs, m.skin, m.hair, m.shirt || "#c9a227", m.pants || "#4a5d3a"));
+      m.active.forEach((a, i) => { const im = document.createElement("img"); im.className = "mon-sprite" + (m.active.length > 1 ? " sm" : ""); im.src = sprite(a.sp, a.col); grp.appendChild(im); });
+    }
+    const top = anchor.startsWith("TOP"), used = stack[anchor] || 0, gap = $("stage").clientWidth * .0187;
+    st[top ? "top" : "bottom"] = (gap + used) + "px";
+    stack[anchor] = used + el.offsetHeight + gap * .5;
+  });
+}
+
+function layout(c) {
+  const scene = $("scene"); scene.innerHTML = "";
+  if (mode === "intro") intro(c); else hud(c);
+  const out = {}; ids.filter(i => i !== "scenario").forEach(i => out[i] = c[i]);
+  if (!accentTouched.accentOwn) delete out.accentOwn;
+  if (!accentTouched.accentOpponent) delete out.accentOpponent;
+  $("json").textContent = JSON.stringify(out, null, 2);
+}
+
+const update = () => layout(cfg());
+[["m-intro", "intro"], ["m-hud", "hud"]].forEach(([id, m]) => $(id).addEventListener("click", () => {
+  mode = m; $("m-intro").classList.toggle("on", m === "intro"); $("m-hud").classList.toggle("on", m === "hud"); update();
+}));
+ids.forEach(id => $(id).addEventListener("input", update));
+window.addEventListener("resize", update);
+update();
+</script>
+</body>
+</html>

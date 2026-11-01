@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "battleplacks",
+  "version": "${version}",
+  "name": "Cobblemon - Battleplacks",
+  "description": "Customizable trainer plaques for Cobblemon battles: your player, your party, and your opponent.",
+  "authors": ["streats22"],
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {},
+  "mixins": ["battleplacks.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.17.2",
+    "minecraft": "1.21.1",
+    "cobblemon": "*"
+  }
+}
