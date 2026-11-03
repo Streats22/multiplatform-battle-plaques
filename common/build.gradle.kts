@@ -9,6 +9,14 @@ architectury {
     minecraft = property("minecraft_version") as String
 }
 
+// The default refmap name (common-common-refmap.json) is shared by every Architectury mod, Cobblemon included.
+// Whichever jar the loader finds first wins, so a clash breaks the other mod's mixins: keep ours unique.
+loom {
+    mixin {
+        defaultRefmapName.set("battleplacks.refmap.json")
+    }
+}
+
 dependencies {
     minecraft("com.mojang:minecraft:${property("minecraft_version")}")
     mappings(loom.officialMojangMappings())

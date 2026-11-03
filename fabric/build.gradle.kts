@@ -32,8 +32,8 @@ dependencies {
     modLocalRuntime("dev.architectury:architectury-fabric:${property("architectury_api_version")}")
 
     // Radical Cobblemon Trainers, so RCT trainer battles can be tested in the dev client (jars supplied in libs/)
-    modLocalRuntime(files(rootProject.file("libs/rctapi-fabric-1.21.1-0.16.2-beta.jar")))
-    modLocalRuntime(files(rootProject.file("libs/rctmod-fabric-1.21.1-0.19.2-beta.jar")))
+    rootProject.file("libs/rctapi-fabric-1.21.1-0.16.2-beta.jar").takeIf { it.exists() }?.let { modLocalRuntime(files(it)) }
+    rootProject.file("libs/rctmod-fabric-1.21.1-0.19.2-beta.jar").takeIf { it.exists() }?.let { modLocalRuntime(files(it)) }
     modLocalRuntime("maven.modrinth:forge-config-api-port:v21.1.6-1.21.1-Fabric")
     // RCT reads its config with Night Config, which Forge Config API Port does not bring along in a dev environment
     runtimeOnly("com.electronwill.night-config:core:3.8.1")

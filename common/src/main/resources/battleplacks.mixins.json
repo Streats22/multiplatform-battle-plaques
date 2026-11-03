@@ -3,7 +3,7 @@
   "minVersion": "0.8",
   "package": "dev.battleplacks.mixin",
   "compatibilityLevel": "JAVA_21",
-  "refmap": "common-common-refmap.json",
+  "refmap": "battleplacks.refmap.json",
   "client": [
     "GuiMixin",
     "CobblemonClientMixin"

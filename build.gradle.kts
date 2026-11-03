@@ -3,6 +3,8 @@ plugins {
     id("dev.architectury.loom") version "1.11-SNAPSHOT" apply false
     // Lets Loom remap the Kotlin metadata inside Cobblemon so its dev client can start
     kotlin("jvm") version "2.2.20" apply false
+    // Bundles :common into the NeoForge jar
+    id("com.gradleup.shadow") version "8.3.6" apply false
 }
 
 subprojects {
@@ -17,6 +19,7 @@ subprojects {
 
     repositories {
         maven("https://maven.parchmentmc.org")
+        maven("https://maven.neoforged.net/releases/")
         maven("https://maven.fabricmc.net/")
         maven("https://maven.impactdev.net/repository/development/")
         exclusiveContent {

@@ -41,22 +41,27 @@ Design reference (from you): Cobblemon's in-battle HUD with a **team card per co
 - **Code structure:** `Battleplacks` (composition root) -> `BattleSource` (interface; `CobblemonBattleSource` is the only class touching Cobblemon) -> `HudRenderer` -> `CardFactory` builds `CardElement`s (tile, trainer group, party bar/balls, label). Themes, anchors and stances are enums that carry their own data.
 - **Dev client (`:fabric:runClient`) now boots.** Cobblemon 1.8.4 and Battleplacks both load, and the integrated world starts. Two fixes made that work: the Kotlin Gradle plugin (lets Loom remap Cobblemon's Kotlin metadata) and Fabric API on `common` too (Cobblemon is remapped once and cached, and needs Fabric API's class hierarchy). If you change those, clear `.gradle*/**/remapped_mods`.
 - **Last known issue:** in the last run the game exited right after the world loaded, with a native crash in LWJGL/GLFW (`fabric/run/hs_err_*.log`, macOS 27, LWJGL 3.3.3). Not yet known whether that is the window being closed or a real LWJGL problem on this macOS version. The battle HUD has still not been seen in-game.
-- **NeoForge does not build yet.** It is switched off in `settings.gradle.kts` (enable with `-PwithNeoForge`); Gradle fails resolving the macOS LWJGL natives.
+- **NeoForge builds** (`dist/battleplacks-neoforge-0.1.0.jar`) but has not been run in-game yet. The real cause of the old failure was the NeoForge Maven missing from the repositories, not macOS. The NeoForge jar ships its own copy of the mixin config without a refmap, because NeoForge 1.21.1 runs on Mojang names.
+- **Mixin refmap is named `battleplacks.refmap.json` on purpose.** The default `common-common-refmap.json` is also used by Cobblemon and other Architectury mods, and a name clash made Cobblemon's own mixins crash at startup.
+- **Cobblemon 1.8.0 and newer** are accepted on both loaders.
 - Visual details marked `TODO(visual)` (portrait scale, 3D trainer baseline) need an in-game check.
 
 ## Local jars (not in the repo)
 
-`libs/` is not in the repo (it holds large third-party jars). For the Fabric dev client put these in `libs/`: `rctapi-fabric-1.21.1-0.16.2-beta.jar`, `rctmod-fabric-1.21.1-0.19.2-beta.jar`, `modmenu-11.0.5.jar`. Cobblemon, Fabric API, Architectury API and Cloth Config come from Maven. The trainer pack `MoreRadicalTrainers1.8.zip` goes in a world's `datapacks` folder.
+`libs/` is not in the repo (it holds large third-party jars). The build needs `modmenu-11.0.5.jar` there (from `https://maven.terraformersmc.com/releases/com/terraformersmc/modmenu/11.0.5/`). The RCT jars `rctapi-fabric-1.21.1-0.16.2-beta.jar` and `rctmod-fabric-1.21.1-0.19.2-beta.jar` are optional and only used by the Fabric dev client. Cobblemon, Fabric API, Architectury API and Cloth Config come from Maven. The trainer pack `MoreRadicalTrainers1.8.zip` goes in a world's `datapacks` folder.
 
 ## Build
 
 ```bash
 export JAVA_HOME=/opt/homebrew/opt/openjdk@21 GRADLE_USER_HOME="$PWD/.gradle-home"
-<gradle 9.3.1>/bin/gradle --no-daemon :fabric:build   # output: fabric/build/libs/
+<gradle 8.14+>/bin/gradle --no-daemon build   # output: fabric/build/libs/ and neoforge/build/libs/
 ```
 
-## Install to test (Fabric)
+## Install to test
 
-Fabric Loader 0.17.2+, Minecraft 1.21.1, plus these in the `mods` folder: Cobblemon 1.8.4, Fabric API, Fabric Language Kotlin, and `dist/battleplacks-fabric-0.1.0.jar`. Start a battle (a wild one is the quickest); config is written to `config/battleplacks.json`.
+Minecraft 1.21.1 and Cobblemon 1.8.0 or newer. Start a battle (a wild one is the quickest); config is written to `config/battleplacks.json`.
+
+- **Fabric:** Fabric Loader 0.17.2+, Fabric API, Fabric Language Kotlin, and `dist/battleplacks-fabric-0.1.0.jar`. Mod Menu + Cloth Config add the config screen.
+- **NeoForge:** NeoForge 21.1+, Kotlin for Forge, and `dist/battleplacks-neoforge-0.1.0.jar`. Cloth Config adds the config button in the mod list.
 
 The mod is named "Battleplacks" as you wrote it; "Battleplaques" is the usual spelling, and the name is only set in a few files.
