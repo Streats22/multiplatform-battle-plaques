@@ -17,6 +17,8 @@ public final class HudRenderer {
     /** Cobblemon's own tile: top margin and the height of each tile in a side's stack. */
     private static final int COBBLEMON_TOP = 4, COBBLEMON_TILE_STEP = 41;
     private static final float FADE_SECONDS = 1f;
+    /** Depth step between a card's elements; more than a 3D model in the overlay reaches towards the screen. */
+    private static final float LAYER_Z = 400f;
 
     private final TrainerEntityPainter painter = new TrainerEntityPainter();
     private final CardFactory factory = new CardFactory(painter);
@@ -58,6 +60,9 @@ public final class HudRenderer {
             for (CardElement element : elements) {
                 element.draw(ctx, y);
                 y += element.height();
+                // Each next element goes in front of the previous one's 3D models, so the party bar covers the
+                // trainer and Pokémon that continue behind it.
+                g.pose().translate(0, 0, LAYER_Z);
             }
             g.pose().popPose();
         }

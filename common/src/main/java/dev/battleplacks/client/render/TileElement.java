@@ -27,7 +27,7 @@ final class TileElement implements CardElement {
         g.fill(frameX, y + PAD, frameX + FRAME, y + PAD + FRAME, 0x59000000);
         g.renderOutline(frameX, y + PAD, FRAME, FRAME, c.accent());
         if (pokemon.portrait() != null) {
-            pokemon.portrait().draw(g, frameX + FRAME / 2f, y + PAD + FRAME / 2f + 4, FRAME - 2, !c.left(), c.partial());
+            pokemon.portrait().draw(g, frameX + FRAME / 2f, y + PAD + 1, FRAME - 2, !c.left(), c.partial());
         }
 
         int textW = w - FRAME - 14;

@@ -12,6 +12,7 @@ import dev.battleplacks.client.BattleSource;
 import dev.battleplacks.client.PlaqueModel;
 import dev.battleplacks.client.PlaqueModel.Active;
 import dev.battleplacks.client.PlaqueModel.Kind;
+import dev.battleplacks.team.SharedTeams;
 import net.minecraft.client.Minecraft;
 
 import java.util.ArrayList;
@@ -24,8 +25,8 @@ import java.util.UUID;
  * Cobblemon 1.8.4 (Fabric and NeoForge jars). RCT trainers are ordinary battles whose actor type is NPC.
  */
 public final class CobblemonBattleSource implements BattleSource {
-    private final PartyReader parties = new PartyReader();
     private final PokemonPortraits portraits = new PokemonPortraits();
+    private final PartyReader parties = new PartyReader(portraits);
 
     @Override
     public boolean inBattle() {
@@ -53,6 +54,19 @@ public final class CobblemonBattleSource implements BattleSource {
         return models;
     }
 
+    @Override
+    public List<SharedTeams.Member> ownTeamToShare() {
+        ClientBattle battle = CobblemonClient.INSTANCE.getBattle();
+        UUID me = Minecraft.getInstance().player == null ? null : Minecraft.getInstance().player.getUUID();
+        if (battle == null || me == null) return List.of();
+        for (ClientBattleSide side : List.of(battle.getSide1(), battle.getSide2())) {
+            for (ClientBattleActor actor : side.getActors()) {
+                if (actor.getUuid().equals(me)) return parties.shareable(actor);
+            }
+        }
+        return List.of();
+    }
+
     private void addSide(List<PlaqueModel> out, ClientBattleSide side, UUID me, boolean ownSide) {
         for (ClientBattleActor actor : side.getActors()) {
             boolean isMe = actor.getUuid().equals(me);
@@ -61,7 +75,7 @@ public final class CobblemonBattleSource implements BattleSource {
                 if (slot.getBattlePokemon() != null) active.add(toActive(slot.getBattlePokemon()));
             }
             out.add(new PlaqueModel(kindOf(actor), actor.getDisplayName().getString(), actor.getUuid(), ownSide,
-                    isMe ? parties.own(actor) : parties.revealed(actor), active));
+                    isMe ? parties.own(actor) : parties.opponent(actor), active));
         }
     }
 

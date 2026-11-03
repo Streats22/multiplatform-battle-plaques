@@ -17,13 +17,13 @@ final class CardFactory {
     List<CardElement> build(PlaqueModel model, PlaqueConfig cfg) {
         List<CardElement> elements = new ArrayList<>();
         if (cfg.showTiles) model.active().forEach(a -> elements.add(new TileElement(a)));
-        if (cfg.showHead) elements.add(new StripElement(model, painter));
-        if (cfg.showParty) {
-            elements.add(switch (cfg.ballStyle) {
-                case BALLS -> new PartyBallsElement(model, cfg);
-                case PIPS -> new PartyBarElement(model, cfg);
-            });
-        }
+        CardElement party = !cfg.showParty ? null : switch (cfg.ballStyle) {
+            case BALLS -> new PartyBallsElement(model, cfg);
+            case PIPS -> new PartyBarElement(model, cfg);
+        };
+        // The trainer and Pokémon continue down behind the party bar (HudRenderer draws later elements in front)
+        if (cfg.showHead) elements.add(new StripElement(model, painter, party == null ? 0 : party.height() - 1));
+        if (party != null) elements.add(party);
         if (cfg.showTrainerName) elements.add(new TeamLabelElement(model));
         return elements;
     }

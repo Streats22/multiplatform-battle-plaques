@@ -54,14 +54,14 @@ final class VsScreen {
 
         int trainerX = Math.round(sw * (left ? 0.20f : 0.80f)) + dx;
         painter.find(m.entityId()).ifPresent(e ->
-                painter.paintStandingOn(c, e, trainerX, bandY + bandH + 8, sh * 0.23f, cfg.stanceFor(m.own())));
+                painter.paintStandingOn(c, e, trainerX, bandY + bandH + 8, sh * 0.23f, m.own()));
 
         float size = sh * 0.17f;
         int pokemonX = Math.round(sw * (left ? 0.36f : 0.64f)) + dx;
         for (int i = 0; i < m.active().size(); i++) {
             var portrait = m.active().get(i).portrait();
             if (portrait != null) {
-                portrait.draw(g, pokemonX + (left ? 1 : -1) * i * size * 0.9f, bandY + bandH - size * 0.3f, size, !left, c.pokemonPartial());
+                portrait.draw(g, pokemonX + (left ? 1 : -1) * i * size * 0.9f, bandY + bandH - size * 1.2f, size, !left, c.pokemonPartial());
             }
         }
 

@@ -26,21 +26,23 @@ final class TrainerEntityPainter {
         return Optional.empty();
     }
 
-    /** Draws the entity with its feet on {@code feetY}. */
-    void paintStandingOn(CardContext c, LivingEntity e, int x, int feetY, float scale, Stance stance) {
-        paint(c, e, x, feetY - e.getBbHeight() / 2f * scale, scale, stance);
+    /** Draws the entity with its feet on {@code feetY}, posed as configured for its side. */
+    void paintStandingOn(CardContext c, LivingEntity e, int x, int feetY, float scale, boolean own) {
+        paint(c, e, x, feetY - e.getBbHeight() / 2f * scale, scale, own);
     }
 
     /** Draws the entity with the top of its head at {@code topY}; whatever is below the clip is simply cut off. */
-    void paintHangingFrom(CardContext c, LivingEntity e, int x, int topY, float scale, Stance stance) {
-        paint(c, e, x, topY + e.getBbHeight() / 2f * scale, scale, stance);
+    void paintHangingFrom(CardContext c, LivingEntity e, int x, int topY, float scale, boolean own) {
+        paint(c, e, x, topY + e.getBbHeight() / 2f * scale, scale, own);
     }
 
     /**
      * Same pose maths as InventoryScreen.renderEntityInInventoryFollowsMouse (1.21.1): the point (x, centreY) is
-     * the middle of the entity, and the translate vector lifts the model by half its height.
+     * the middle of the entity, and the translate vector lifts the model by half its height. The stance turns and
+     * leans the whole body here; arms and head are posed by {@link TrainerPoseOverride} while the model is drawn.
      */
-    private void paint(CardContext c, LivingEntity e, int x, float centreY, float scale, Stance stance) {
+    private void paint(CardContext c, LivingEntity e, int x, float centreY, float scale, boolean own) {
+        Stance stance = c.cfg().stanceFor(own);
         float turn = (c.left() ? 1f : -1f) * stance.facing(c.cfg());
         float oBody = e.yBodyRot, oYaw = e.getYRot(), oPitch = e.getXRot(), oHead = e.yHeadRot, oHeadO = e.yHeadRotO;
         Pose oPose = e.getPose();
@@ -54,8 +56,13 @@ final class TrainerEntityPainter {
 
         // TODO(visual): lean direction; flip the sign if the trainer tilts backwards.
         Quaternionf pose = new Quaternionf().rotateZ((float) Math.PI).rotateX((float) Math.toRadians(stance.lean(c.cfg())));
-        InventoryScreen.renderEntityInInventory(c.g(), x, centreY, scale,
-                new Vector3f(0f, e.getBbHeight() / 2f + 0.0625f, 0f), pose, new Quaternionf().rotateX(-0.1f), e);
+        TrainerPoseOverride.begin(c.cfg().armsFor(own), c.cfg().headFor(own));
+        try {
+            InventoryScreen.renderEntityInInventory(c.g(), x, centreY, scale,
+                    new Vector3f(0f, e.getBbHeight() / 2f + 0.0625f, 0f), pose, new Quaternionf().rotateX(-0.1f), e);
+        } finally {
+            TrainerPoseOverride.end();
+        }
 
         e.yBodyRot = oBody;
         e.setYRot(oYaw);

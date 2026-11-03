@@ -21,42 +21,60 @@ final class ConfigPage {
 
     ConfigPage toggle(String label, String tip, boolean current, boolean dflt, Consumer<Boolean> save) {
         category.addEntry(entries.startBooleanToggle(Component.literal(label), current)
-                .setDefaultValue(dflt).setTooltip(Component.literal(tip)).setSaveConsumer(save).build());
+                .setDefaultValue(dflt).setTooltip(tooltip(tip)).setSaveConsumer(save).build());
         return this;
     }
 
+    /** A choice between enum constants, shown as words ("OVER_SHOULDER" reads "Over shoulder"). */
     <E extends Enum<E>> ConfigPage choice(String label, String tip, Class<E> type, E current, E dflt, Consumer<E> save) {
         category.addEntry(entries.startEnumSelector(Component.literal(label), type, current)
-                .setDefaultValue(dflt).setTooltip(Component.literal(tip)).setSaveConsumer(save).build());
+                .setEnumNameProvider(e -> Component.literal(words(e.name())))
+                .setDefaultValue(dflt).setTooltip(tooltip(tip)).setSaveConsumer(save).build());
         return this;
+    }
+
+    private static String words(String constant) {
+        String s = constant.replace('_', ' ').toLowerCase();
+        return Character.toUpperCase(s.charAt(0)) + s.substring(1);
+    }
+
+    /** Tooltips are split on "\n" so longer explanations get one line per option. */
+    private static Component[] tooltip(String tip) {
+        return java.util.Arrays.stream(tip.split("\n")).map(Component::literal).toArray(Component[]::new);
     }
 
     /** A whole-number slider shown with a suffix, e.g. "92%". */
     ConfigPage slider(String label, String tip, int current, int dflt, int min, int max, String suffix, Consumer<Integer> save) {
         category.addEntry(entries.startIntSlider(Component.literal(label), current, min, max)
-                .setDefaultValue(dflt).setTooltip(Component.literal(tip))
+                .setDefaultValue(dflt).setTooltip(tooltip(tip))
                 .setTextGetter(v -> Component.literal(v + suffix)).setSaveConsumer(save).build());
         return this;
     }
 
     ConfigPage strings(String label, String tip, List<String> current, List<String> dflt, Consumer<List<String>> save) {
         category.addEntry(entries.startStrList(Component.literal(label), current)
-                .setDefaultValue(dflt).setTooltip(Component.literal(tip)).setSaveConsumer(save).build());
+                .setDefaultValue(dflt).setTooltip(tooltip(tip)).setSaveConsumer(save).build());
         return this;
     }
 
     /** A text field; {@code error} returns a message to block saving, or empty when the text is fine. */
     ConfigPage text(String label, String tip, String current, Function<String, Optional<Component>> error, Consumer<String> save) {
         category.addEntry(entries.startStrField(Component.literal(label), current)
-                .setDefaultValue("").setTooltip(Component.literal(tip))
+                .setDefaultValue("").setTooltip(tooltip(tip))
                 .setErrorSupplier(error).setSaveConsumer(save).build());
+        return this;
+    }
+
+    /** A line of plain text, e.g. why a list is empty. */
+    ConfigPage note(String text) {
+        category.addEntry(entries.startTextDescription(Component.literal(text)).build());
         return this;
     }
 
     /** An ARGB colour; 0 means "use the theme's colour". */
     ConfigPage colour(String label, String tip, int current, Consumer<Integer> save) {
         category.addEntry(entries.startAlphaColorField(Component.literal(label), current)
-                .setDefaultValue(0).setTooltip(Component.literal(tip)).setSaveConsumer(save).build());
+                .setDefaultValue(0).setTooltip(tooltip(tip)).setSaveConsumer(save).build());
         return this;
     }
 }

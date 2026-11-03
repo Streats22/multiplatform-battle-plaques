@@ -5,7 +5,9 @@
   "compatibilityLevel": "JAVA_21",
   "refmap": "battleplacks.refmap.json",
   "client": [
+    "EntityRendererMixin",
     "GuiMixin",
+    "HumanoidModelMixin",
     "CobblemonClientMixin"
   ],
   "injectors": {

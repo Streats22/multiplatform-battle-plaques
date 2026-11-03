@@ -22,11 +22,14 @@ final class TeamLabelElement implements CardElement {
         return chosen.isEmpty() ? "Team " + model.name() : chosen;
     }
 
+    /** Lines the name up with the start of the party bar's coloured part, away from the screen edge. */
+    private static final int INSET = 12;
+
     @Override
     public int height() { return 14; }
 
     @Override
     public void draw(CardContext c, int y) {
-        c.g().drawString(c.font(), label, c.textX(label, 0), y + 3, c.fade(0xFFFFFFFF), true);
+        c.g().drawString(c.font(), label, c.textX(label, INSET), y + 3, c.fade(0xFFFFFFFF), true);
     }
 }

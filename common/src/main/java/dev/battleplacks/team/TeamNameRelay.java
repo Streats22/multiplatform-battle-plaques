@@ -13,15 +13,10 @@ import java.util.concurrent.ConcurrentHashMap;
  * their networking and join/leave events to this.
  */
 public final class TeamNameRelay {
-    /** Sends a payload to one player, but only if that player's client has the mod. Implemented per loader. */
-    public interface Sender {
-        void send(ServerPlayer to, TeamNamePayload payload);
-    }
-
     private final Map<UUID, String> names = new ConcurrentHashMap<>();
-    private final Sender sender;
+    private final PayloadSender sender;
 
-    public TeamNameRelay(Sender sender) { this.sender = sender; }
+    public TeamNameRelay(PayloadSender sender) { this.sender = sender; }
 
     /** The sender's own id is used, never the one in the packet, so nobody can rename someone else. */
     public void received(ServerPlayer from, TeamNamePayload payload) {

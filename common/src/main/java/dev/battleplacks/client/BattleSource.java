@@ -1,5 +1,7 @@
 package dev.battleplacks.client;
 
+import dev.battleplacks.team.SharedTeams;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -13,4 +15,7 @@ public interface BattleSource {
 
     /** One model per trainer, the local player first. Empty when no battle is running. */
     List<PlaqueModel> snapshot();
+
+    /** Our own team in this battle, in the form we share it with opponents. Empty when there is none. */
+    List<SharedTeams.Member> ownTeamToShare();
 }
